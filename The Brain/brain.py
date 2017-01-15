@@ -14,16 +14,29 @@ class brain:
             nbvamp=nbvamp+j[2]
         return side*(nbww-nbvamp)
 
-    def calcPath(self):
+    def calcPath(self,camp):
         map=self.map
         humans=self.map.humans
-        if self.camp==1:
+        if camp==1:
             pawn=self.map.werewolf
-            ennemi=self.map.vampire
         else:
-            ennemi = self.map.werewolf
             pawn = self.map.vampire
+        maps = []
+        for i in len(pawn):
+            maps = maps + [self.newMap(self,0,1)]
+            maps = maps + [self.newMap(self,0,-1)]
+            maps = maps + [self.newMap(self,1,1)]
+            maps = maps + [self.newMap(self,1,-1)]
 
+    def newMap(self,coord,side):
+        tempPawn = pawn
+        tempMap = self.map
+        tempPawn[i][coord] = tempPawn[i][coord]+side
+        if camp == 1:
+            tempMap.werewolf = tempPawn
+        else:
+            tempMap.vampire = tempPawn
+        return tempMap
 
 
     def buildTree(self):
