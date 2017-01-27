@@ -16,17 +16,18 @@ class brain:
 
     def calcPath(self,camp):
         map=self.map
-        humans=self.map.humans
+        humans=map.humans
         if camp==1:
-            pawn=self.map.werewolf
+            pawn=map.werewolf
         else:
-            pawn = self.map.vampire
+            pawn = map.vampire
         maps = []
         for i in len(pawn):
             maps = maps + [self.newMap(self,0,1)]
             maps = maps + [self.newMap(self,0,-1)]
             maps = maps + [self.newMap(self,1,1)]
             maps = maps + [self.newMap(self,1,-1)]
+        return maps
 
     def newMap(self,coord,side):
         tempPawn = pawn
