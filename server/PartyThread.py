@@ -13,32 +13,40 @@ class PartyThread(Thread):
         self.__socket = sock
         self.map = current_map
 
-    def __getcommand(self):
-        data = bytes()
-        while len(data) < 3:
-            data += self.__socket.recv(3 - len(data))
-        return data.decode()
+    def __getcommand(sock):
+        commande = bytes()
+        while len(commande) < 3:
+            commande += sock.recv(3 - len(commande))
+        return commande.decode()
 
     def __number_of_changes(self):
         data = bytes()
         while len(data) < 1:
             data += self.__socket.recv(1 - len(data))
-        return struct.unpack("d", data)[0]
+        return struct.unpack("b", data)[0]
 
     def __get_changes(self, n):
         changes = []
+        # TODO : séparer
         for i in range(n):
             data = bytes()
             while len(data) < 5:
                 data += self.__socket.recv(5 - len(data))
-            changes.append(data)
+            changes.append(struct.unpack("b", data)[0])
         return changes
 
-    def __sendresult(self, res):
-        # juste pour etre sur
-        res = float(res)
-        # TODO implement ATK
-        self.__socket.send(struct.pack("MOV", res))
+    def __sendcommand(self, commande, data1, data2):
+        paquet = bytes()
+        paquet += commande.encode()
+        if type(data1) in (str,):
+            paquet += data1.encode()
+        else:
+            paquet += struct.pack("=B", data1)
+        if type(data2) in (str,):
+            paquet += data2.encode()
+        else:
+            paquet += struct.pack("=B", data2)
+        self.__socket.send(paquet)
 
     def __printerror(self, message):
         print(message)
@@ -72,7 +80,7 @@ class PartyThread(Thread):
 
                 # TODO, call AI with the map and receive new map updated
                 # res = call_ai(map, changes)
-                self.__sendresult(res)
+                self.__sendcommand(res)
             else:
                 raise ValueError("commande inconnue")
 
