@@ -12,7 +12,7 @@ class brain:
             nbww=nbww+i[2]
         for j in vamp:
             nbvamp=nbvamp+j[2]
-        return side*(nbww-nbvamp)
+        return self.side*(nbww-nbvamp)
 
     def calcPath(self,camp):
         map=self.map
@@ -22,27 +22,25 @@ class brain:
         else:
             pawn = map.vampire
         maps = []
-        for i in len(pawn):
-            maps = maps + [self.newMapMove(self,map,i,[1,0],camp)]
-            maps = maps + [self.newMapMove(self,map,i,[-1,0],camp)]
-            maps = maps + [self.newMapMove(self,map,i,[0,1],camp)]
-            maps = maps + [self.newMapMove(self,map,i,[0,-1],camp)]
-            maps = maps + [self.newMapMove(self,map,i,[1,1],camp)]
-            maps = maps + [self.newMapMove(self,map,i,[-1,1],camp)]
-            maps = maps + [self.newMapMove(self,map,i,[1,-1],camp)]
-            maps = maps + [self.newMapMove(self,map,i,[-1,-1],camp)]
+        for i in range(len(pawn)):
+            maps += [self.newmapmove(self, map, i, [1, 0], camp)]
+            maps += [self.newmapmove(self, map, i, [-1, 0], camp)]
+            maps += [self.newmapmove(self, map, i, [0, 1], camp)]
+            maps += [self.newmapmove(self, map, i, [0, -1], camp)]
+            maps += [self.newmapmove(self, map, i, [1, 1], camp)]
+            maps += [self.newmapmove(self, map, i, [-1, 1], camp)]
+            maps += [self.newmapmove(self, map, i, [1, -1], camp)]
+            maps += [self.newmapmove(self, map, i, [-1, -1], camp)]
 
         return maps
 
-    def newMapMove(self,map,i,coord,camp):
+    def newmapmove(self, map, i, coord, camp):
         newMap=map
-        if camp==1:
-            map.werewolf[i][1]=coord;
-        else if camp==0:
-            map.vampire[i][1]=coord;
-        return map
-
-
+        if camp==1 and map.coordX>=map.werewolf[i][1][0]+coord[0]>=1:
+            map.werewolf[i][1][0]+=coord[0]
+        else if camp==0 and map.coordY>=map.werewolf[i][1][1]+coord[1]>=1:
+            map.vampire[i][1][1]+=coord[1]
+        return newMap
 
 
     def buildTree(self):

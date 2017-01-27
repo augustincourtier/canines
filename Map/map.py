@@ -14,3 +14,5 @@ class map:
 
     def addHumans(self, number, coordX, coordY):
         self.humans = self.vampire + [number, [coordX, coordY]]
+
+    def moveVampire(self,):
