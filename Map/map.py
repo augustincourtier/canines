@@ -6,7 +6,19 @@ class Map:
         self.vampire=vampire
         self.werewolf=werewolf
 
-    def addvampire(self,number,coordX,coordY):
+    def updatemap(self,data):
+        for i in data:
+            if i[2]!=0:
+                self.addhumans(i[2],i[0],i[1])
+            elif i[3]!=0:
+                self.addvampire(i[3],i[0],i[1])
+            elif i[4]!=0:
+                self.addwerewolf(i[4], i[0], i[1])
+            else:
+
+
+
+def addvampire(self,number,coordX,coordY):
         self.vampire += [number, [coordX, coordY]]
 
     def addwerewolf(self, number, coordX, coordY):
