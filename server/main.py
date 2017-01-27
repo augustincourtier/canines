@@ -1,14 +1,89 @@
+# -*- coding: utf-8 -*-
 import socket
-from server.server_config import Server
-from time import sleep
 import struct
+
+SERVER_ADDRESS = "138.195.110.0"
+SERVER_PORT = 5555
 
 
 def getcommand(sock):
     commande = bytes()
-    while len(commande)<3:
+    while len(commande) < 3:
         commande += sock.recv(3-len(commande))
     return commande.decode()
+
+
+def getset(sock):
+    """Command to get map dimensions"""
+    n = bytes()
+    m = bytes()
+    while len(n)<3:
+        n += sock.recv(1-len(n))
+    while len(m)<3:
+        m += sock.recv(1-len(m))
+    return [n.decode(), m.decode()]
+
+
+def gethme(sock):
+    """Command to get initial coords"""
+    x = bytes()
+    y = bytes()
+    while len(x) < 1:
+        x += sock.recv(1-len(x))
+    while len(y) < 1:
+        y += sock.recv(1-len(y))
+    return [x.decode(), y.decode()]
+
+
+def gethum(sock):
+    """"Command to get houses info"""
+    n = bytes()
+    while len(n) < 1:
+        n += sock.recv(1-len(n))
+    coords = []
+    i = 0
+
+    while i < n:
+        x = bytes()
+        y = bytes()
+        while len(x) < 1:
+            x += sock.recv(1 - len(x))
+        while len(y) < 1:
+            y += sock.recv(1 - len(y))
+        coords.append([x.decode(), y.decode()])
+        i += 1
+    return coords
+
+
+def getmap(sock):
+    """"Command to get houses info"""
+    n = bytes()
+    while len(n) < 1:
+        n += sock.recv(1-len(n))
+    initial_map = []
+    i = 0
+
+    while i < n:
+        x = bytes()
+        y = bytes()
+        nhumans = bytes()
+        nvampires = bytes()
+        nwerewolves = bytes()
+
+        while len(x) < 1:
+            x += sock.recv(1 - len(x))
+        while len(y) < 1:
+            y += sock.recv(1 - len(y))
+        while len(nhumans) < 1:
+            nhumans += sock.recv(1 - len(y))
+        while len(nvampires) < 1:
+            nvampires += sock.recv(1 - len(y))
+        while len(nwerewolves) < 1:
+            nwerewolves += sock.recv(1 - len(y))
+
+        initial_map.append([x.decode(), y.decode(), nhumans.decode(), nvampires.decode(), nwerewolves.decode()])
+        i += 1
+    return initial_map
 
 
 def getresult(sock):
@@ -18,52 +93,62 @@ def getresult(sock):
     return struct.unpack("d", data)[0]
 
 
-def sendcommand(sock, commande, op1, op2):
+def sendcommand(sock, commande, data1, data2):
     paquet = bytes()
     paquet += commande.encode()
-    paquet += struct.pack("d", float(op1))
-    paquet += struct.pack("d", float(op2))
+    paquet += struct.pack("d", float(data1))
+    paquet += struct.pack("d", float(data2))
     sock.send(paquet)
 
 
 if __name__ == '__main__':
-    # lancement du serveur
-    server = Server(555)
-    server.start()
-
-    # on attend un peu
-    sleep(1)
-
-    # connexion au server
+    # Connexion au server
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect(("localhost", 555))
+    sock.connect((SERVER_ADDRESS, SERVER_PORT))
 
-    # implementation du protocole
-    commande = getcommand(sock)
+    # Implementation du protocole
 
-    if commande != u"HLO":
-        raise ValueError("Erreur protocole: attendu HLO (cote client)")
+    # SENDING NAME WITH NME COMMAND
+    name = u"VAMPIRE"
+    sendcommand(sock, u"NME", len(name.encode()), name)
 
-    sock.send(u"HLO".encode())
+    # RECEIVING DIMENSIONS (SET)
+    commande1 = getcommand(sock)
+    if commande1 != u"SET":
+        raise ValueError("Erreur protocole: attendu SET (cote client)")
+    else:
+        dimensions = getset(sock)
+        n = dimensions[0]
+        m = dimensions[1]
+        print("Received dimensions! \n")
 
-    # tests des commandes
-    sendcommand(sock, "ADD", 7, 2)
-    res = getresult(sock)
-    print("Addition OK ? %s" % (res == 7+2))
+    # RECEIVING INITIAL POSITION (HME)
+    commande2 = getcommand(sock)
+    if commande2 != u"HME":
+        raise ValueError("Erreur protocole: attendu HME (cote client)")
+    else:
+        initial_coords = gethme(sock)
+        x = initial_coords[0]
+        y = initial_coords[1]
+        print("Received initial coords! \n")
 
-    sendcommand(sock, "MIN", 7, 2)
-    res = getresult(sock)
-    print("Soustraction OK ? %s" % (res == 7 - 2))
+    # RECEIVING HOUSES INFOS (HUM)
+    commande3 = getcommand(sock)
+    if commande3 != u"HUM":
+        raise ValueError("Erreur protocole: attendu HUM (cote client)")
+    else:
+        house_coords = gethum(sock)
+        print("Received initial houses! \n")
 
-    sendcommand(sock, "TIM", 7, 2)
-    res = getresult(sock)
-    print("Multiplication OK ? %s" % (res == 7 * 2))
+    # RECEIVING 1ST MAP (MAP)
+    commande4 = getcommand(sock)
+    if commande4 != u"MAP":
+        raise ValueError("Erreur protocole: attendu MAP (cote client)")
+    else:
+        map_infos = getmap(sock)
+        print("Received first map! \n")
 
-    sendcommand(sock, "DIV", 7, 2)
-    res = getresult(sock)
-    print("Division OK ? %s" % (res == 7.0 / 2))
+    # INITIALIZING THREAD
+    # partyThread = PartyThread(sock).run()
 
-    sock.send("QUT".encode())
-    sleep(1)
-    server.stoplistening()
-    server.join()
+    # while partyThread.
