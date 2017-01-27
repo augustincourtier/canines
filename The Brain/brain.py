@@ -23,22 +23,28 @@ class brain:
             pawn = map.vampire
         maps = []
         for i in len(pawn):
-            maps = maps + [self.newMap(self,0,1)]
-            maps = maps + [self.newMap(self,0,-1)]
-            maps = maps + [self.newMap(self,1,1)]
-            maps = maps + [self.newMap(self,1,-1)]
+            maps = maps + [self.newMapMove(self,map,i,[1,0],camp)]
+            maps = maps + [self.newMapMove(self,map,i,[-1,0],camp)]
+            maps = maps + [self.newMapMove(self,map,i,[0,1],camp)]
+            maps = maps + [self.newMapMove(self,map,i,[0,-1],camp)]
+            maps = maps + [self.newMapMove(self,map,i,[1,1],camp)]
+            maps = maps + [self.newMapMove(self,map,i,[-1,1],camp)]
+            maps = maps + [self.newMapMove(self,map,i,[1,-1],camp)]
+            maps = maps + [self.newMapMove(self,map,i,[-1,-1],camp)]
+
         return maps
 
-    def newMap(self,coord,side):
-        tempPawn = pawn
-        tempMap = self.map
-        tempPawn[i][coord] = tempPawn[i][coord]+side
-        if camp == 1:
-            tempMap.werewolf = tempPawn
-        else:
-            tempMap.vampire = tempPawn
-        return tempMap
+    def newMapMove(self,map,i,coord,camp):
+        newMap=map
+        if camp==1:
+            map.werewolf[i][1]=coord;
+        else if camp==0:
+            map.vampire[i][1]=coord;
+        return map
+
+
 
 
     def buildTree(self):
+
 
