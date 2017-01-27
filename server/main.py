@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import socket
 import struct
+from Map.map import Map
+from Server.PartyThread import PartyThread
 
-SERVER_ADDRESS = "localhost"
+SERVER_ADDRESS = "192.168.43.166"
 SERVER_PORT = 5555
 
 
@@ -117,16 +119,16 @@ if __name__ == '__main__':
         print("Received dimensions! \n")
 
     # RECEIVING HOUSES INFOS (HUM)
-    commande3 = getcommand(sock)
-    if commande3 != "HUM":
+    commande2 = getcommand(sock)
+    if commande2 != "HUM":
         raise ValueError("Erreur protocole: attendu HUM (cote client)")
     else:
         house_coords = gethum(sock)
         print("Received initial houses! \n")
 
     # RECEIVING INITIAL POSITION (HME)
-    commande2 = getcommand(sock)
-    if commande2 != "HME":
+    commande3 = getcommand(sock)
+    if commande3 != "HME":
         raise ValueError("Erreur protocole: attendu HME (cote client)")
     else:
         initial_coords = gethme(sock)
@@ -140,9 +142,11 @@ if __name__ == '__main__':
         raise ValueError("Erreur protocole: attendu MAP (cote client)")
     else:
         map_infos = getmap(sock)
-        print("Received first map! \n")
+        print("Received first map! : ", map_infos, "\n")
+
+    new_map = Map(vampire=[], werewolf=[], humans=[], sizeX=n, sizeY=m)
+    # Initialize IA with initial coords and map
+    new_map.updatemap(map_infos)
 
     # INITIALIZING THREAD
-    # partyThread = PartyThread(sock).run()
-
-    # while partyThread.
+    partyThread = PartyThread(sock).run()
