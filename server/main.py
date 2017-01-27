@@ -2,7 +2,7 @@
 import socket
 import struct
 
-SERVER_ADDRESS = "138.195.110.0"
+SERVER_ADDRESS = "localhost"
 SERVER_PORT = 5555
 
 
@@ -17,61 +17,56 @@ def getset(sock):
     """Command to get map dimensions"""
     n = bytes()
     m = bytes()
-    while len(n)<3:
-        n += sock.recv(1-len(n))
-    while len(m)<3:
-        m += sock.recv(1-len(m))
-    return [n.decode(), m.decode()]
+    n += sock.recv(1)
+    m += sock.recv(1)
+    return [struct.unpack('b', n)[0], struct.unpack('b', m)[0]]
 
 
 def gethme(sock):
     """Command to get initial coords"""
     x = bytes()
     y = bytes()
-    while len(x) < 1:
-        x += sock.recv(1-len(x))
-    while len(y) < 1:
-        y += sock.recv(1-len(y))
-    return [x.decode(), y.decode()]
+    x += sock.recv(1)
+    y += sock.recv(1)
+    return [struct.unpack('b', x)[0], struct.unpack('b', y)[0]]
 
 
 def gethum(sock):
     """"Command to get houses info"""
     n = bytes()
-    while len(n) < 1:
-        n += sock.recv(1-len(n))
+    n += sock.recv(1)
     coords = []
-    i = 0
+    n = struct.unpack('b', n)[0]
 
-    while i < n:
+    for i in range(n):
         x = bytes()
         y = bytes()
-        while len(x) < 1:
-            x += sock.recv(1 - len(x))
-        while len(y) < 1:
-            y += sock.recv(1 - len(y))
-        coords.append([x.decode(), y.decode()])
-        i += 1
+
+        x += sock.recv(1)
+        y += sock.recv(1)
+
+        coords.append([struct.unpack('b', x)[0], struct.unpack('b', y)[0]])
     return coords
 
 
 def getmap(sock):
     """"Command to get houses info"""
     n = bytes()
-    while len(n) < 1:
-        n += sock.recv(1-len(n))
+    n += sock.recv(1)
     initial_map = []
-    i = 0
-
-    while i < n:
+    n = struct.unpack('b', n)[0]
+    for i in range(n):
         x = bytes()
         y = bytes()
         nhumans = bytes()
         nvampires = bytes()
         nwerewolves = bytes()
 
-        while len(x) < 1:
-            x += sock.recv(1 - len(x))
+        x += sock.recv(1)
+        y += sock.recv(1)
+        nhumans += sock.recv(1)
+        nvampires += sock.recv(1)
+        nwerewolves += sock.recv(1)
         while len(y) < 1:
             y += sock.recv(1 - len(y))
         while len(nhumans) < 1:
@@ -81,23 +76,22 @@ def getmap(sock):
         while len(nwerewolves) < 1:
             nwerewolves += sock.recv(1 - len(y))
 
-        initial_map.append([x.decode(), y.decode(), nhumans.decode(), nvampires.decode(), nwerewolves.decode()])
-        i += 1
+        initial_map.append([struct.unpack('b', x)[0], struct.unpack('b', y)[0], struct.unpack('b', nhumans)[0],
+                            struct.unpack('b', nvampires)[0], struct.unpack('b', nwerewolves)[0]])
     return initial_map
-
-
-def getresult(sock):
-    data = bytes()
-    while len(data) != 8:
-        data += sock.recv(8 - len(data))
-    return struct.unpack("d", data)[0]
 
 
 def sendcommand(sock, commande, data1, data2):
     paquet = bytes()
     paquet += commande.encode()
-    paquet += struct.pack("d", float(data1))
-    paquet += struct.pack("d", float(data2))
+    if type(data1) in (str,):
+        paquet += data1.encode()
+    else:
+        paquet += struct.pack("=B", data1)
+    if type(data2) in (str,):
+        paquet += data2.encode()
+    else:
+        paquet += struct.pack("=B", data2)
     sock.send(paquet)
 
 
@@ -109,12 +103,12 @@ if __name__ == '__main__':
     # Implementation du protocole
 
     # SENDING NAME WITH NME COMMAND
-    name = u"VAMPIRE"
-    sendcommand(sock, u"NME", len(name.encode()), name)
+    name = "VAMPIRE"
+    sendcommand(sock, "NME", 7, name)
 
     # RECEIVING DIMENSIONS (SET)
     commande1 = getcommand(sock)
-    if commande1 != u"SET":
+    if commande1 != "SET":
         raise ValueError("Erreur protocole: attendu SET (cote client)")
     else:
         dimensions = getset(sock)
@@ -122,9 +116,17 @@ if __name__ == '__main__':
         m = dimensions[1]
         print("Received dimensions! \n")
 
+    # RECEIVING HOUSES INFOS (HUM)
+    commande3 = getcommand(sock)
+    if commande3 != "HUM":
+        raise ValueError("Erreur protocole: attendu HUM (cote client)")
+    else:
+        house_coords = gethum(sock)
+        print("Received initial houses! \n")
+
     # RECEIVING INITIAL POSITION (HME)
     commande2 = getcommand(sock)
-    if commande2 != u"HME":
+    if commande2 != "HME":
         raise ValueError("Erreur protocole: attendu HME (cote client)")
     else:
         initial_coords = gethme(sock)
@@ -132,17 +134,9 @@ if __name__ == '__main__':
         y = initial_coords[1]
         print("Received initial coords! \n")
 
-    # RECEIVING HOUSES INFOS (HUM)
-    commande3 = getcommand(sock)
-    if commande3 != u"HUM":
-        raise ValueError("Erreur protocole: attendu HUM (cote client)")
-    else:
-        house_coords = gethum(sock)
-        print("Received initial houses! \n")
-
     # RECEIVING 1ST MAP (MAP)
     commande4 = getcommand(sock)
-    if commande4 != u"MAP":
+    if commande4 != "MAP":
         raise ValueError("Erreur protocole: attendu MAP (cote client)")
     else:
         map_infos = getmap(sock)
