@@ -1,11 +1,13 @@
-class brain:
-    def __init__(self,map,side):
-        self.map = map
+import Map.map
+
+class Brain:
+    def __init__(self, currentmap, side):
+        self.currentmap = currentmap
         self.side = side #1=werewolf, -1=vampires
 
     def score(self):
-        ww=self.map.werewolf
-        vamp=self.map.vamp
+        ww=self.currentmap.werewolf
+        vamp=self.currentmap.vamp
         nbww = 0
         nbvamp = 0
         for i in ww:
@@ -15,32 +17,44 @@ class brain:
         return self.side*(nbww-nbvamp)
 
     def calcPath(self,camp):
-        map=self.map
-        humans=map.humans
+        Map=self.currentmap
         if camp==1:
-            pawn=map.werewolf
+            pawn=Map.werewolf
         else:
-            pawn = map.vampire
+            pawn = Map.vampire
         maps = []
         for i in range(len(pawn)):
-            maps += [self.newmapmove(self, map, i, [1, 0], camp)]
-            maps += [self.newmapmove(self, map, i, [-1, 0], camp)]
-            maps += [self.newmapmove(self, map, i, [0, 1], camp)]
-            maps += [self.newmapmove(self, map, i, [0, -1], camp)]
-            maps += [self.newmapmove(self, map, i, [1, 1], camp)]
-            maps += [self.newmapmove(self, map, i, [-1, 1], camp)]
-            maps += [self.newmapmove(self, map, i, [1, -1], camp)]
-            maps += [self.newmapmove(self, map, i, [-1, -1], camp)]
-
+            maps += self.movegrp(self, i, camp)
         return maps
 
-    def newmapmove(self, map, i, coord, camp):
-        newMap=map
-        if camp==1 and map.coordX>=map.werewolf[i][1][0]+coord[0]>=1:
-            map.werewolf[i][1][0]+=coord[0]
-        else if camp==0 and map.coordY>=map.werewolf[i][1][1]+coord[1]>=1:
-            map.vampire[i][1][1]+=coord[1]
-        return newMap
+    def movegrp(self, i, camp):
+        maps=[]
+        tempmap=self.currentmap
+        if camp==1:
+            coordX=tempmap.werewolf[i][1][0]
+            coordY=tempmap.werewolf[i][1][1]
+            for j in range(Map.werewolf[i][0])
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+                maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
+        else:
+            coordX = tempmap.vampire[i][1][0]
+            coordY = tempmap.vampire[i][1][1]
+            for j in range(Map.vampire[i][0])
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+                maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
+        return maps
 
 
     def buildTree(self):
