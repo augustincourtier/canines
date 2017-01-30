@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from server.main import *
 import socket
 from threading import Thread
@@ -6,7 +8,7 @@ import struct
 
 class PartyThread(Thread):
 
-    def __init__(self, sock):
+    def __init__(self, sock, current_map):
         Thread.__init__(self)
         if not isinstance(sock, socket.socket) or sock is None:
             raise TypeError("Necessite une vraie socket")

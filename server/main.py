@@ -8,14 +8,14 @@ SERVER_ADDRESS = "192.168.43.166"
 SERVER_PORT = 5555
 
 
-def getcommand(sock):
+def get_command(sock):
     commande = bytes()
     while len(commande) < 3:
         commande += sock.recv(3-len(commande))
     return commande.decode()
 
 
-def getset(sock):
+def get_set(sock):
     """Command to get map dimensions"""
     n = bytes()
     m = bytes()
@@ -24,7 +24,7 @@ def getset(sock):
     return [struct.unpack('b', n)[0], struct.unpack('b', m)[0]]
 
 
-def gethme(sock):
+def get_hme(sock):
     """Command to get initial coords"""
     x = bytes()
     y = bytes()
@@ -33,7 +33,7 @@ def gethme(sock):
     return [struct.unpack('b', x)[0], struct.unpack('b', y)[0]]
 
 
-def gethum(sock):
+def get_hum(sock):
     """"Command to get houses info"""
     n = bytes()
     n += sock.recv(1)
@@ -51,7 +51,7 @@ def gethum(sock):
     return coords
 
 
-def getmap(sock):
+def get_map(sock):
     """"Command to get houses info"""
     n = bytes()
     n += sock.recv(1)
@@ -83,7 +83,7 @@ def getmap(sock):
     return initial_map
 
 
-def sendcommand(sock, commande, data1, data2):
+def send_command(sock, commande, data1, data2):
     paquet = bytes()
     paquet += commande.encode()
     if type(data1) in (str,):
@@ -106,47 +106,47 @@ if __name__ == '__main__':
 
     # SENDING NAME WITH NME COMMAND
     name = "VAMPIRE"
-    sendcommand(sock, "NME", 7, name)
+    send_command(sock, "NME", 7, name)
 
     # RECEIVING DIMENSIONS (SET)
-    commande1 = getcommand(sock)
+    commande1 = get_command(sock)
     if commande1 != "SET":
         raise ValueError("Erreur protocole: attendu SET (cote client)")
     else:
-        dimensions = getset(sock)
+        dimensions = get_set(sock)
         n = dimensions[0]
         m = dimensions[1]
         print("Received dimensions! \n")
 
     # RECEIVING HOUSES INFOS (HUM)
-    commande2 = getcommand(sock)
+    commande2 = get_command(sock)
     if commande2 != "HUM":
         raise ValueError("Erreur protocole: attendu HUM (cote client)")
     else:
-        house_coords = gethum(sock)
+        house_coords = get_hum(sock)
         print("Received initial houses! \n")
 
     # RECEIVING INITIAL POSITION (HME)
-    commande3 = getcommand(sock)
+    commande3 = get_command(sock)
     if commande3 != "HME":
         raise ValueError("Erreur protocole: attendu HME (cote client)")
     else:
-        initial_coords = gethme(sock)
+        initial_coords = get_hme(sock)
         x = initial_coords[0]
         y = initial_coords[1]
         print("Received initial coords! \n")
 
     # RECEIVING 1ST MAP (MAP)
-    commande4 = getcommand(sock)
+    commande4 = get_command(sock)
     if commande4 != "MAP":
         raise ValueError("Erreur protocole: attendu MAP (cote client)")
     else:
-        map_infos = getmap(sock)
+        map_infos = get_map(sock)
         print("Received first map! : ", map_infos, "\n")
 
-    new_map = Map(vampire=[], werewolf=[], humans=[], sizeX=n, sizeY=m)
+    new_map = Map(vampires=[], werewolves=[], humans=[], size_x=n, size_y=m)
     # Initialize IA with initial coords and map
-    new_map.updatemap(map_infos)
+    new_map.initialize_map(map_infos)
 
     # INITIALIZING THREAD
-    partyThread = PartyThread(sock).run()
+    partyThread = PartyThread(sock, new_map).run()

@@ -1,54 +1,66 @@
+# -*- coding: utf-8 -*-
 class Map:
-    def __init__(self,vampire,werewolf,humans,sizeX,sizeY):
-        self.sizeX=sizeX
-        self.sizeY=sizeY
-        self.humans=humans
-        self.vampire=vampire
-        self.werewolf=werewolf
+    """Object storing the map of the current turn."""
 
-    def updatemap(self,data):
-        for i in data:
-            if i[2]!=0:
-                self.addhumans(i[2],i[0],i[1])
-            elif i[3]!=0:
-                self.addvampire(i[3],i[0],i[1])
-            elif i[4]!=0:
-                self.addwerewolf(i[4], i[0], i[1])
-            else:
+    def __init__(self, vampires, werewolves, humans, size_x, size_y):
+        """
+        :param vampires: list of lists [number, [x,y]]
+        :param werewolves: list of lists [number, [x,y]]
+        :param humans: list of lists [number, [x,y]]
+        :param size_x: integer
+        :param size_y: integer
+        """
+        self.size_x = size_x
+        self.size_y = size_y
+        self.humans = humans
+        self.vampires = vampires
+        self.werewolves = werewolves
 
+    def initialize_map(self, update_data):
+        """update_data = [[X, Y, humans, vampires, werewolves], ...]"""
+        for case_data in update_data:
+            # if humans
+            if case_data[2] != 0:
+                self.add_humans(number=case_data[2], coord_x=case_data[0], coord_y=case_data[1])
 
+            # if vampires
+            if case_data[3] != 0:
+                self.add_vampires(number=case_data[3], coord_x=case_data[0], coord_y=case_data[1])
 
-def addvampire(self,number,coordX,coordY):
-        self.vampire += [number, [coordX, coordY]]
-
-    def addwerewolf(self, number, coordX, coordY):
-        self.werewolf = self.vampire + [number, [coordX, coordY]]
-
-    def addhumans(self, number, coordX, coordY):
-        self.humans = self.vampire + [number, [coordX, coordY]]
-
-    def movevampire(self,number,coordX,coordY,idgrp):
-        if self.vampire[idgrp][0]<=number:
-            self.vampire[idgrp][1]=[coordX,coordY]
+            # if werewolves
+            if case_data[4] != 0:
+                self.add_werewolves(number=case_data[4], coord_x=case_data[0], coord_y=case_data[1])
+    
+    def add_vampires(self, number, coord_x, coord_y):
+        self.vampires += [number, [coord_x, coord_y]]
+    
+    def add_werewolves(self, number, coord_x, coord_y):
+        self.werewolves += [number, [coord_x, coord_y]]
+    
+    def add_humans(self, number, coord_x, coord_y):
+        self.humans += [number, [coord_x, coord_y]]
+    
+    def move_vampires(self, number, coord_x, coord_y, idgrp):
+        if self.vampires[idgrp][0] <= number:
+            self.vampires[idgrp][1] = [coord_x, coord_y]
         else:
-            self.vampire[idgrp][0]-=number
-            self.addVampire(map,number,coordX,coordY)
+            self.vampires[idgrp][0] -= number
+            self.add_vampires(number, coord_x, coord_y)
 
-    def movewerewolf(self,number,coordX,coordY,idgrp):
-        if self.werewolf[idgrp][0]<=number:
-            self.werewolf[idgrp][1]=[coordX,coordY]
+    def move_werewolves(self, number, coord_x, coord_y, idgrp):
+        if self.werewolves[idgrp][0] <= number:
+            self.werewolves[idgrp][1] = [coord_x, coord_y]
         else:
-            self.werewolf[idgrp][0]-=number
-            self.addWerewolf(map,number,coordX,coordY)
-
-    def findgrp(self,coordX,coordY):
-        for i in range(len(self.vampire)):
-            if self.vampire[1]==[coordX,coordY]:
-                return [i,"vampire"]
-        for i in range(len(self.werewolf)):
-            if self.vampire[1] == [coordX, coordY]:
+            self.werewolves[idgrp][0] -= number
+            self.add_werewolves(number, coord_x, coord_y)
+    
+    def find_grp(self, coord_x, coord_y):
+        for i in range(len(self.vampires)):
+            if self.vampires[1] == [coord_x, coord_y]:
+                return [i, "vampire"]
+        for i in range(len(self.werewolves)):
+            if self.vampires[1] == [coord_x, coord_y]:
                 return [i, "werewolf"]
         for i in range(len(self.humans)):
-            if self.vampire[1] == [coordX, coordY]:
+            if self.vampires[1] == [coord_x, coord_y]:
                 return [i, "humans"]
-
