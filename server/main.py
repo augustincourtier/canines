@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+
 import socket
 import struct
-from Map.map import Map
-from server.PartyThread import PartyThread
+from map import Map
+from PartyThread import PartyThread
 
-SERVER_ADDRESS = "192.168.43.166"
+SERVER_ADDRESS = "138.195.107.170"
 SERVER_PORT = 5555
 
 
@@ -93,7 +94,7 @@ def send_command(sock, commande, data1, data2):
     if type(data2) in (str,):
         paquet += data2.encode()
     else:
-        paquet += struct.pack("=B", data2)
+        paquet += str(bytearray(data2))
     sock.send(paquet)
 
 
@@ -148,5 +149,8 @@ if __name__ == '__main__':
     # Initialize IA with initial coords and map
     new_map.initialize_map(map_infos)
 
+    # testing a move
+    send_command(sock, "MOV", 1, [4,3,3,3,3])
+
     # INITIALIZING THREAD
-    partyThread = PartyThread(sock, new_map).run()
+    # partyThread = PartyThread(sock, new_map).run()
