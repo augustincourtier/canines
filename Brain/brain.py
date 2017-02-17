@@ -1,4 +1,5 @@
-import Map.map
+# -*- coding: utf-8 -*-
+from server.map import Map
 
 class Brain:
     def __init__(self, currentmap, side):
@@ -33,7 +34,7 @@ class Brain:
         if camp==1:
             coordX=tempmap.werewolf[i][1][0]
             coordY=tempmap.werewolf[i][1][1]
-            for j in range(Map.werewolf[i][0])
+            for j in range(Map.werewolf[i][0]):
                 maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
                 maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
                 maps+=[tempmap.movewerewolf(tempmap,j,coordX,coordY)]
@@ -45,7 +46,7 @@ class Brain:
         else:
             coordX = tempmap.vampire[i][1][0]
             coordY = tempmap.vampire[i][1][1]
-            for j in range(Map.vampire[i][0])
+            for j in range(Map.vampire[i][0]):
                 maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
                 maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
                 maps += [tempmap.movevampire(tempmap, j, coordX, coordY)]
@@ -58,5 +59,6 @@ class Brain:
 
 
     def buildTree(self):
+        """"""
 
 

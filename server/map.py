@@ -2,7 +2,7 @@
 class Map:
     """Object storing the map of the current turn."""
 
-    def __init__(self, vampires, werewolves, humans, size_x, size_y):
+    def __init__(self, vampires, werewolves, humans, size_x, size_y, initial_coords):
         """
         :param vampires: list of lists [number, [x,y]]
         :param werewolves: list of lists [number, [x,y]]
@@ -15,6 +15,7 @@ class Map:
         self.humans = humans
         self.vampires = vampires
         self.werewolves = werewolves
+        self.initial_coords = initial_coords
 
     def initialize_map(self, update_data):
         """update_data = [[X, Y, humans, vampires, werewolves], ...]"""
@@ -57,10 +58,10 @@ class Map:
     def find_grp(self, coord_x, coord_y):
         for i in range(len(self.vampires)):
             if self.vampires[1] == [coord_x, coord_y]:
-                return [i, "vampire"]
+                return [i, -1]
         for i in range(len(self.werewolves)):
-            if self.vampires[1] == [coord_x, coord_y]:
-                return [i, "werewolf"]
+            if self.werewolves[1] == [coord_x, coord_y]:
+                return [i, 1]
         for i in range(len(self.humans)):
             if self.vampires[1] == [coord_x, coord_y]:
-                return [i, "humans"]
+                return [i, 0]

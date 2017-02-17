@@ -2,10 +2,13 @@
 
 import socket
 import struct
-from map import Map
-from PartyThread import PartyThread
+import array
 
-SERVER_ADDRESS = "138.195.107.170"
+from server.map import Map
+from Brain.brain import Brain
+
+
+SERVER_ADDRESS = "138.195.110.234"
 SERVER_PORT = 5555
 
 
@@ -94,9 +97,44 @@ def send_command(sock, commande, data1, data2):
     if type(data2) in (str,):
         paquet += data2.encode()
     else:
-        paquet += str(bytearray(data2))
+        paquet += array.array('B', data2).tostring()
+
     sock.send(paquet)
 
+
+def number_of_changes(sock):
+    data = bytes()
+    while len(data) < 1:
+        data += sock.recv(1 - len(data))
+    return struct.unpack("b", data)[0]
+
+
+def get_changes(sock, n):
+    changes = []
+    for i in range(n):
+        x = bytes()
+        y = bytes()
+        people = bytes()
+        new_x = bytes()
+        new_y = bytes()
+
+        x += sock.recv(1)
+        y += sock.recv(1)
+        people += sock.recv(1)
+        new_x += sock.recv(1)
+        new_y += sock.recv(1)
+        while len(y) < 1:
+            y += sock.recv(1 - len(y))
+        while len(people) < 1:
+            people += sock.recv(1 - len(y))
+        while len(new_x) < 1:
+            new_x += sock.recv(1 - len(y))
+        while len(new_y) < 1:
+            new_y += sock.recv(1 - len(y))
+
+        changes.append([struct.unpack('b', x)[0], struct.unpack('b', y)[0], struct.unpack('b', people)[0],
+                            struct.unpack('b', new_x)[0], struct.unpack('b', new_y)[0]])
+    return changes
 
 if __name__ == '__main__':
     # Connexion au server
@@ -133,8 +171,8 @@ if __name__ == '__main__':
         raise ValueError("Erreur protocole: attendu HME (cote client)")
     else:
         initial_coords = get_hme(sock)
-        x = initial_coords[0]
-        y = initial_coords[1]
+        initial_x = initial_coords[0]
+        initial_y = initial_coords[1]
         print("Received initial coords! \n")
 
     # RECEIVING 1ST MAP (MAP)
@@ -145,12 +183,38 @@ if __name__ == '__main__':
         map_infos = get_map(sock)
         print("Received first map! : ", map_infos, "\n")
 
-    new_map = Map(vampires=[], werewolves=[], humans=[], size_x=n, size_y=m)
-    # Initialize IA with initial coords and map
+    # Initialize map with initial coords and map
+    new_map = Map(vampires=[], werewolves=[], humans=[], size_x=n, size_y=m, initial_coords=initial_coords)
     new_map.initialize_map(map_infos)
+    team = new_map.find_grp(initial_x, initial_y)
 
+
+    # Initialize
+    brain = Brain(new_map, team[1])
     # testing a move
-    send_command(sock, "MOV", 1, [4,3,3,3,3])
+    # send_command(sock, "MOV", 1, [4,3,3,3,3])
 
     # INITIALIZING THREAD
     # partyThread = PartyThread(sock, new_map).run()
+
+    while True:
+        commande5 = get_command(sock)
+        if commande5 not in ["UPD", "END"]:
+            raise ValueError("Erreur protocole: mauvaise commande reçue.")
+
+        elif commande5 == "END":
+            break
+
+        elif commande5 == "UPD":
+            # get updates
+            print(type(sock))
+            numbers = number_of_changes(sock)
+            changes = get_changes(sock, numbers)
+
+            print(changes)
+
+            # TODO, call AI with the map and receive new map updated
+            # res = call_ai(map, changes)
+            send_command(sock, "MOV", 1, [initial_x, initial_y, 2, initial_x+1, initial_y+1])
+        else:
+            raise ValueError("commande inconnue")
