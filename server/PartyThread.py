@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from server.main import *
 import socket
 from threading import Thread
 import struct
@@ -15,10 +14,10 @@ class PartyThread(Thread):
         self.__socket = sock
         self.map = current_map
 
-    def __getcommand(sock):
+    def __getcommand(self):
         commande = bytes()
         while len(commande) < 3:
-            commande += sock.recv(3 - len(commande))
+            commande += self.__socket.recv(3 - len(commande))
         return commande.decode()
 
     def __number_of_changes(self):
@@ -47,7 +46,8 @@ class PartyThread(Thread):
         if type(data2) in (str,):
             paquet += data2.encode()
         else:
-            paquet += struct.pack("=B", data2)
+            # transforms array of integer into string of bytes
+            paquet += str(bytearray(data2))
         self.__socket.send(paquet)
 
     def __printerror(self, message):
