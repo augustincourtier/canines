@@ -32,13 +32,13 @@ class Map:
                 self.add_werewolves(number=case_data[4], coord_x=case_data[0], coord_y=case_data[1])
 
     def add_vampires(self, number, coord_x, coord_y):
-        self.vampires += [number, [coord_x, coord_y]]
+        self.vampires.append([number, [coord_x, coord_y]])
 
     def add_werewolves(self, number, coord_x, coord_y):
-        self.werewolves += [number, [coord_x, coord_y]]
+        self.werewolves.append([number, [coord_x, coord_y]])
 
     def add_humans(self, number, coord_x, coord_y):
-        self.humans += [number, [coord_x, coord_y]]
+        self.humans.append([number, [coord_x, coord_y]])
 
     def move_vampires(self, number, coord_x, coord_y, idgrp):
         if self.vampires[idgrp][0] <= number:
@@ -64,3 +64,8 @@ class Map:
         for i in range(len(self.humans)):
             if self.vampires[1] == [coord_x, coord_y]:
                 return [i, "humans"]
+
+    def displayMap(self):
+        print (self.humans)
+        print(self.vampires)
+        print(self.werewolves)

@@ -1,4 +1,5 @@
 import Map.map
+from copy import deepcopy
 
 class Brain:
     def __init__(self, currentmap, side):
@@ -45,48 +46,53 @@ class Brain:
             for j in range(Map.werewolf[i][0]):
                 for k in [-1,0,1]:
                     for l in [-1,0,1]:
-                        maps += [tempmap.movewerewolf(tempmap, j, coordX+k, coordY+l)]
+                        maps.append(tempmap.movewerewolf(tempmap, j, coordX+k, coordY+l))
         else:
             coordX = tempmap.vampire[i][1][0]
             coordY = tempmap.vampire[i][1][1]
             for j in range(Map.vampire[i][0]):
                 for k in [-1,0,1]:
                     for l in [-1,0,1]:
-                        maps += [tempmap.movevampire(tempmap, j, coordX+k, coordY+l)]
+                        maps.append(tempmap.movevampire(tempmap, j, coordX+k, coordY+l))
         return maps
 
     def movegrpCond(self, i, camp):
         maps=[]
-        H=self.map.humans
-        tempmap=self.currentmap
+        H=self.currentmap.humans
+        map=self.currentmap
         if camp==1:
-            coordX=tempmap.werewolf[i][1][0]
-            coordY=tempmap.werewolf[i][1][1]
-            for j in range(Map.werewolf[i][0]):
+            coordX=map.werewolves[i][1][0]
+            coordY=map.werewolves[i][1][1]
+            for j in range(1,map.werewolves[i][0]):
                 for k in [-1,0,1]:
                     for l in [-1,0,1]:
                         for h in H:
                             if max(abs(coordX-h[1][0]),abs(coordY-h[1][1]))>max(abs(coordX+k-h[1][0]),abs(coordY+l-h[1][1])):
-                                maps.append([tempmap.movewerewolf(tempmap, j, coordX+k, coordY+l)])
+                                tempmap=deepcopy(map)
+                                maps.append(tempmap.move_werewolves(j, coordX+k, coordY+l, i))
         else:
-            coordX = tempmap.vampire[i][1][0]
-            coordY = tempmap.vampire[i][1][1]
-            for j in range(Map.vampire[i][0]):
+            coordX = map.vampires[i][1][0]
+            coordY = map.vampires[i][1][1]
+            for j in range(1,map.vampires[i][0]):
                 for k in [-1,0,1]:
                     for l in [-1,0,1]:
                         for h in H:
                             if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
-                                maps.append([tempmap.movevampire(tempmap, j, coordX + k, coordY + l)])
+                                tempmap=deepcopy(map)
+                                tempmap.move_vampires(j, coordX + k, coordY + l, i)
+                                if tempmap not in maps:
+                                    maps.append(tempmap)
+
         return maps
 
     def createMapsfromMap(self,camp):
         maps=[]
         if camp==1:
-            for i in range(len(self.map.werewolves)):
-                maps.append(self.moveGrpCond(i,camp))
+            for i in range(len(self.currentmap.werewolves)):
+                maps+=(self.movegrpCond(i,camp))
         elif camp==0:
-            for i in range(len(self.map.vampires)):
-                maps.append(self.moveGrpCond(i,camp))
+            for i in range(len(self.currentmap.vampires)):
+                maps+=(self.movegrpCond(i,camp))
         return maps
 
     def probaH(self, grp1, grp2):
@@ -149,6 +155,23 @@ class Brain:
             else:
                 captureH[i][0]='E'
 
+    def createMOV(self, newmap):
+        map=self.currentmap
+        H=map.humans
+        V=map.vampires
+        W=map.werewolves
+        newH=newmap.humans
+        newV=newmap.vampires
+        newW=newmap.werewolves
+        for i in H:
+            if i in newH:
+                H.remove(i)
+        for i in V:
+            if i in newV:
+                V.remove(i)
+        for i in W:
+            if i in newW:
+                W.remove(i)
 
 
 

@@ -2,8 +2,8 @@
 
 import socket
 import struct
-from map import Map
-from PartyThread import PartyThread
+
+from Map.map import Map
 
 SERVER_ADDRESS = "138.195.107.170"
 SERVER_PORT = 5555
