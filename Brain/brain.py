@@ -166,12 +166,25 @@ class Brain:
         for i in H:
             if i in newH:
                 H.remove(i)
+                newH.remove(i)
         for i in V:
             if i in newV:
                 V.remove(i)
+                newV.remove(i)
         for i in W:
             if i in newW:
                 W.remove(i)
+                newW.remove(i)
+
+        for i in H:
+            mov=[]
+            for j in newH:
+                if max(abs(i[1][0]-j[1][0]),abs(i[1][1]-j[1][1]))<=1:
+                    mov.append(j)
+                if len(mov)==1:
+                    #voir MOV
+
+
 
 
 
