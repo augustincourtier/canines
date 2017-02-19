@@ -69,3 +69,6 @@ class Map:
         print (self.humans)
         print(self.vampires)
         print(self.werewolves)
+
+    def convertIntoArray(self):
+        return [self.vampires, self.werewolves, self.humans, self.size_x, self.size_y]
