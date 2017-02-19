@@ -195,6 +195,7 @@ class Brain:
         possibleTuples = [] #this will store each possible tuples for one valid box (ex 1 guy on the box, 2 guys etc..)
         for i in range(len(valueBoxes)):
             possibleTuplesForOneBox = []
+
             for j in range(0, sizeOfOriginalGroup+1):
                 possibleTuplesForOneBox += [[j, [valueBoxes[i][0], valueBoxes[i][1]]]]
             possibleTuples += [possibleTuplesForOneBox]
@@ -220,7 +221,7 @@ class Brain:
         return valueMoves
 
     def chooseMove(self, valueMoves):
-        # TODO: choose the move to do based on the result of findClosestHumans() and other input
+        # TODO: choose the move to do based on the result of findTargetHumans() and other input
 
         return valueMoves[0]
 
@@ -290,7 +291,7 @@ class Brain:
     # This function finds the closest group of humans (and biggest if equality) from each box in boxes
     # the paramater previousCoord is used to keep consistancy in moves : if a group of human is closer than other groups
     # from a box but farer than the previous box, then the goal is not to got toward this group of human
-    def findClosestHumans(self, boxes, previousCoord):
+    def findTargetHumans(self, boxes, previousCoord):
         H=self.currentmap.humans
         boxWithClosestHumans = []
         for box in boxes:
@@ -344,7 +345,13 @@ class Brain:
             for i in range(len(self.currentmap.vampires)):
                 boxes = self.generateValueBoxes(i,camp)
                 valueMoves = self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
+                print valueMoves
+                print len(valueMoves)
                 moves += [self.chooseMove(valueMoves)]
 
-        print self.createMOV(moves, camp)
+        # L = [[1,2],[3,4,5],[6,7]]
+        # print(Brain.generateMoves(L))
+        # print(len(Brain.generateMoves(L)))
+
+        # print self.createMOV(moves, camp)
         return self.createMOV(moves, camp)
