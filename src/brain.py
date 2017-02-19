@@ -219,6 +219,12 @@ class Brain:
 
         return valueMoves
 
+    def chooseMove(self, valueMoves):
+        # TODO: choose the move to do based on the result of findClosestHumans() and other input
+
+        return valueMoves[0]
+
+
     # This function takes a move defined by index and the corresponding array of tuples
     # and returns the sum of characters of that move
     @staticmethod
@@ -281,25 +287,64 @@ class Brain:
                 resultList += [elem]
         return resultList
 
-    # Tests everything
-    def test(self,camp):
-        boxes=[]
-        if camp==1:
-            for i in range(len(self.currentmap.werewolves)):
-                boxes+=self.generateValueBoxes(i,camp)
-                print self.generateValueMoves(boxes, self.currentmap.werewolves[i][0])
-        else:
-            for i in range(len(self.currentmap.vampires)):
-                boxes+=self.generateValueBoxes(i,camp)
-                self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
-                print self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
-                print len(self.generateValueMoves(boxes, self.currentmap.vampires[i][0]))
+    # This function finds the closest group of humans (and biggest if equality) from each box in boxes
+    # the paramater previousCoord is used to keep consistancy in moves : if a group of human is closer than other groups
+    # from a box but farer than the previous box, then the goal is not to got toward this group of human
+    def findClosestHumans(self, boxes, previousCoord):
+        H=self.currentmap.humans
+        boxWithClosestHumans = []
+        for box in boxes:
+            closestHumans = []
+            for h in H:
+                if max(abs(previousCoord[0] - h[1][0]),abs(previousCoord[1] - h[1][1])) > max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
+                    if closestHumans == []:
+                        closestHumans = [h[1][0], h[1][1], h[0]]
+                    else:
+                        if abs(box[0] - closestHumans[0]) == abs(box[0] - h[1][0]) and abs(box[1] - closestHumans[1]) == abs(box[1] - h[1][1]):
+                            if h[0] > closestHumans[2]:
+                                closestHumans = [h[1][0], h[1][1], h[0]]
+                            else:
+                                pass
+                        elif abs(box[0] - closestHumans[0]) >= abs(box[0] - h[1][0]) and abs(box[1] - closestHumans[1]) >= abs(box[1] - h[1][1]):
+                            closestHumans = [h[1][0], h[1][1], h[0]]
+            boxWithClosestHumans += [[box, closestHumans]]
 
-        return boxes
+        return boxWithClosestHumans
 
-    # Not used currently
     def arrayIsInList(self, array, list):
         for elem in list:
             if np.array_equal(np.array(array), np.array(elem)):
                 return True
         return False
+
+    # This function create MOV that can be sent to server from an array of moves
+    def createMOV(self, moves, camp):
+        movCmd = []
+        movNb = 0
+        if camp==1:
+            groups = self.currentmap.werewolves
+        else:
+            groups = self.currentmap.vampires
+
+        for i in range(len(groups)):
+            for el in moves[i]:
+                movCmd += [groups[i][1][0], groups[i][1][1], el[0], el[1][0], el[1][1]]
+                movNb += 1
+
+        return [movNb, movCmd]
+
+    # Tests everything
+    def test(self,camp):
+        moves=[]
+        if camp==1:
+            for i in range(len(self.currentmap.werewolves)):
+                boxes+=self.generateValueBoxes(i,camp)
+                # print self.generateValueMoves(boxes, self.currentmap.werewolves[i][0])
+        else:
+            for i in range(len(self.currentmap.vampires)):
+                boxes = self.generateValueBoxes(i,camp)
+                valueMoves = self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
+                moves += [self.chooseMove(valueMoves)]
+
+        print self.createMOV(moves, camp)
+        return self.createMOV(moves, camp)
