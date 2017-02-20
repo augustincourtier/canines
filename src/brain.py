@@ -187,8 +187,9 @@ class Brain:
                     for h in H:
                         # box is interesting if going there make a group closer to humans TODO: also to ennemies or allies
                         if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
-                            if not self.arrayIsInList([coordX + k, coordY + l], boxes):
-                                boxes += [[coordX + k, coordY + l]]
+                            if coordX + k <= map.size_x and coordX + k >= 0 and coordY + l <= map.size_y and coordY + l >= 0:
+                                if not self.arrayIsInList([coordX + k, coordY + l], boxes):
+                                    boxes += [[coordX + k, coordY + l]]
         return boxes
 
     # this function generates all possibles subgroups from one original group and then choose valid possibilities (n subgroups with a total of people =  sizeOfOriginalGroup)
@@ -221,12 +222,77 @@ class Brain:
 
         return valueMoves
 
-    def chooseMove(self, valueMoves):
+    def chooseMove(self, valueMoves, boxes, group):
         # TODO: choose the move to do based on the result of findTargetHumans() and other input
+        # first heuristic
+        newMoves1 = []
+        scoreMax = 0
+        for move in valueMoves:
+            if scoreMax == 0:
+                scoreMax = self.heuristic1(move)
+                newMoves1 = [move]
+            else:
+                if scoreMax == self.heuristic1(move):
+                    newMoves1.append(move)
+                elif scoreMax < self.heuristic1(move):
+                    scoreMax = self.heuristic1(move)
+                    newMoves1 = [move]
 
-        i = randint(0,len(valueMoves)-1)
-        return valueMoves[i]
+        # second heuristic
+        newMoves2 = []
+        scoreMax = 0
+        for move in newMoves1:
+            if scoreMax == 0:
+                scoreMax = self.heuristic2(move, boxes, group[1])
+                newMoves2 = [move]
+            else:
+                if scoreMax == self.heuristic2(move, boxes, group[1]):
+                    newMoves2.append(move)
+                elif scoreMax < self.heuristic2(move, boxes, group[1]):
+                    scoreMax = self.heuristic2(move, boxes, group[1])
+                    newMoves2 = [move]
 
+        i = randint(0,len(newMoves2)-1)
+        return newMoves2[i]
+
+    def heuristic1(self, move):
+        score = 0
+        targets = self.currentmap.humans
+        goodTargets = []
+        for subgroup in move:
+            if self.side == 1:
+                enemies = self.currentmap.vampires
+            else:
+                enemies = self.currentmap.werewolves
+            for target in targets:
+                distTargetEnemy = []
+                for enemy in enemies:
+                    distTargetEnemy += [max(abs(target[1][0]-enemy[1][0]),abs(target[1][1]-enemy[1][1]))]
+                distMinEnemy = min(distTargetEnemy)
+                if distMinEnemy <  max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])): # Distance subgroup target
+                    score += 0
+                else:
+                    if subgroup[0] < target[0]:
+                        score += 0
+                    else:
+                        if not self.arrayIsInList(target[1], goodTargets):
+                            score += target[0]
+                            goodTargets += [target[1]]
+        return score
+
+    def heuristic2(self, move, boxes, previousCoord):
+        boxWithTargetHumans = self.findTargetHumans(boxes, previousCoord)
+        score = 0
+        for subgroup in move:
+            for boxWithTarget in boxWithTargetHumans:
+                if subgroup[1] == boxWithTarget[0]:
+                    peopleInTargets = []
+                    for target in boxWithTarget[1]:
+                        peopleInTargets += [target[0]]
+                    if subgroup[0] >= min(peopleInTargets):
+                        score += min(sum(peopleInTargets), subgroup[0])
+
+        return score
 
     # This function takes a move defined by index and the corresponding array of tuples
     # and returns the sum of characters of that move
@@ -295,24 +361,25 @@ class Brain:
     # from a box but farer than the previous box, then the goal is not to got toward this group of human
     def findTargetHumans(self, boxes, previousCoord):
         H=self.currentmap.humans
-        boxWithClosestHumans = []
+        boxWithTargetHumans = []
         for box in boxes:
+            targetHumans = []
             closestHumans = []
             for h in H:
                 if max(abs(previousCoord[0] - h[1][0]),abs(previousCoord[1] - h[1][1])) > max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
                     if closestHumans == []:
-                        closestHumans = [h[1][0], h[1][1], h[0]]
+                        closestHumans = [h[0],[h[1][0], h[1][1]]]
+                        targetHumans = [[h[0],[h[1][0], h[1][1]]]]
                     else:
-                        if abs(box[0] - closestHumans[0]) == abs(box[0] - h[1][0]) and abs(box[1] - closestHumans[1]) == abs(box[1] - h[1][1]):
-                            if h[0] > closestHumans[2]:
-                                closestHumans = [h[1][0], h[1][1], h[0]]
-                            else:
-                                pass
-                        elif abs(box[0] - closestHumans[0]) >= abs(box[0] - h[1][0]) and abs(box[1] - closestHumans[1]) >= abs(box[1] - h[1][1]):
-                            closestHumans = [h[1][0], h[1][1], h[0]]
-            boxWithClosestHumans += [[box, closestHumans]]
+                        if max(abs(box[0] - closestHumans[1][0]), abs(box[1] - closestHumans[1][1])) == max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
+                            targetHumans.append([h[0],[h[1][0], h[1][1]]])
+                        elif max(abs(box[0] - closestHumans[1][0]), abs(box[1] - closestHumans[1][1])) >= max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
+                            closestHumans = [h[0],[h[1][0], h[1][1]]]
+                            targetHumans = [[h[0],[h[1][0], h[1][1]]]]
 
-        return boxWithClosestHumans
+            boxWithTargetHumans += [[box, targetHumans]]
+
+        return boxWithTargetHumans
 
     def arrayIsInList(self, array, list):
         for elem in list:
@@ -360,7 +427,7 @@ class Brain:
             for i in range(len(self.currentmap.vampires)):
                 boxes = self.generateValueBoxes(i)
                 valueMoves = self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
-                moves += [self.chooseMove(valueMoves)]
+                moves += [self.chooseMove(valueMoves, boxes, self.currentmap.vampires[i])]
 
         # L = [[1,2],[3,4,5],[6,7]]
         # print(Brain.generateMoves(L))

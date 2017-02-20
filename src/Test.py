@@ -4,7 +4,7 @@ import map
 
 vampire=[[4,[2,5]]]
 werewolf=[[4,[4,5]]]
-humans=[[4,[3,3]],[2,[1,10]], [1,[3,10]], [2,[5,10]]]
+humans=[[4,[3,3]],[2,[1,10]], [2,[3,10]], [2,[5,10]]]
 mapTest=map.Map(vampire,werewolf,humans,10,10)
 
 # print mapTest
