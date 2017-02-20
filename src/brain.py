@@ -1,6 +1,7 @@
 import map
 import numpy as np
 from copy import deepcopy
+from random import randint
 
 class Brain:
     def __init__(self, currentmap, side):
@@ -168,11 +169,11 @@ class Brain:
     ####
 
     # this function gives interesting boxes around one group
-    def generateValueBoxes(self, i, camp):
+    def generateValueBoxes(self, i):
         boxes=[] # this arrays stores interesting boxes around a group
         H=self.currentmap.humans
         map=self.currentmap
-        if camp==1:
+        if self.side==1:
             group = map.werewolves[i]
         else:
             group = map.vampires[i]
@@ -223,7 +224,8 @@ class Brain:
     def chooseMove(self, valueMoves):
         # TODO: choose the move to do based on the result of findTargetHumans() and other input
 
-        return valueMoves[0]
+        i = randint(0,len(valueMoves)-1)
+        return valueMoves[i]
 
 
     # This function takes a move defined by index and the corresponding array of tuples
@@ -319,10 +321,10 @@ class Brain:
         return False
 
     # This function create MOV that can be sent to server from an array of moves
-    def createMOV(self, moves, camp):
+    def createMOV(self, moves):
         movCmd = []
         movNb = 0
-        if camp==1:
+        if self.side==1:
             groups = self.currentmap.werewolves
         else:
             groups = self.currentmap.vampires
@@ -334,24 +336,34 @@ class Brain:
 
         return [movNb, movCmd]
 
+    @staticmethod
+    def deleteZeroMoves(moves):
+        nonZeroMoves = []
+        for move in moves:
+            nonZeroMove = []
+            for tuple in move:
+                if tuple[0] != 0:
+                    nonZeroMove += [tuple]
+            nonZeroMoves += [nonZeroMove]
+
+        return nonZeroMoves
+
     # Tests everything
-    def test(self,camp):
+    def returnMoves(self):
         moves=[]
-        if camp==1:
+        if self.side==1:
             for i in range(len(self.currentmap.werewolves)):
-                boxes+=self.generateValueBoxes(i,camp)
-                # print self.generateValueMoves(boxes, self.currentmap.werewolves[i][0])
+                boxes = self.generateValueBoxes(i)
+                valueMoves = self.generateValueMoves(boxes, self.currentmap.werewolves[i][0])
+                moves += [self.chooseMove(valueMoves)]
         else:
             for i in range(len(self.currentmap.vampires)):
-                boxes = self.generateValueBoxes(i,camp)
+                boxes = self.generateValueBoxes(i)
                 valueMoves = self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
-                print valueMoves
-                print len(valueMoves)
                 moves += [self.chooseMove(valueMoves)]
 
         # L = [[1,2],[3,4,5],[6,7]]
         # print(Brain.generateMoves(L))
         # print(len(Brain.generateMoves(L)))
 
-        # print self.createMOV(moves, camp)
-        return self.createMOV(moves, camp)
+        return self.createMOV(Brain.deleteZeroMoves(moves))

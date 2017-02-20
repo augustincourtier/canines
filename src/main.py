@@ -3,10 +3,10 @@
 import socket
 import struct
 import array
-import map
-import brain
-
-SERVER_ADDRESS = "138.195.110.234"
+from map import Map
+from brain import Brain
+import time
+SERVER_ADDRESS = "192.168.1.66"
 SERVER_PORT = 5555
 
 
@@ -189,8 +189,6 @@ if __name__ == '__main__':
 
     # Initialize
     brain = Brain(new_map, team[1])
-    # testing a move
-    # send_command(sock, "MOV", 1, [4,3,3,3,3])
 
     while True:
         commande5 = get_command(sock)
@@ -202,14 +200,19 @@ if __name__ == '__main__':
 
         elif commande5 == "UPD":
             # get updates
-            print(type(sock))
             numbers = number_of_changes(sock)
             changes = get_changes(sock, numbers)
+            if (len(changes) > 0):
+                new_map.update_map(changes)
 
-            print(changes)
+            moves = brain.returnMoves()
 
-            # TODO, call AI with the map and receive new map updated
-            # res = call_ai(map, changes)
-            send_command(sock, "MOV", 1, [initial_x, initial_y, 2, initial_x+1, initial_y+1])
+            send_command(sock, "MOV", moves[0], moves[1])
+
+            # Update brain with the new map
+            brain = Brain(new_map, team[1])
+
+            time.sleep(1)
+
         else:
             raise ValueError("commande inconnue")
