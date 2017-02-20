@@ -2,7 +2,7 @@
 class Map:
     """Object storing the map of the current turn."""
 
-    def __init__(self, vampires, werewolves, humans, size_x, size_y, initial_coords):
+    def __init__(self, vampires, werewolves, humans, size_x, size_y):
         """
         :param vampires: list of lists [number, [x,y]]
         :param werewolves: list of lists [number, [x,y]]
@@ -15,7 +15,6 @@ class Map:
         self.humans = humans
         self.vampires = vampires
         self.werewolves = werewolves
-        self.initial_coords = initial_coords
 
     def initialize_map(self, init_data):
         """update_data = [[X, Y, humans, vampires, werewolves], ...]"""

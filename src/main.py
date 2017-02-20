@@ -182,7 +182,7 @@ if __name__ == '__main__':
         print("Received first map! : ", map_infos, "\n")
 
     # Initialize map with initial coords and map
-    new_map = Map(vampires=[], werewolves=[], humans=[], size_x=n, size_y=m, initial_coords=initial_coords)
+    new_map = Map(vampires=[], werewolves=[], humans=[], size_x=m, size_y=n)
     new_map.initialize_map(map_infos)
     team = new_map.find_grp(initial_x, initial_y)
 
@@ -206,13 +206,11 @@ if __name__ == '__main__':
                 new_map.update_map(changes)
 
             moves = brain.returnMoves()
-
             send_command(sock, "MOV", moves[0], moves[1])
 
             # Update brain with the new map
             brain = Brain(new_map, team[1])
 
             time.sleep(1)
-
         else:
             raise ValueError("commande inconnue")

@@ -187,7 +187,7 @@ class Brain:
                     for h in H:
                         # box is interesting if going there make a group closer to humans TODO: also to ennemies or allies
                         if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
-                            if coordX + k <= map.size_x and coordX + k >= 0 and coordY + l <= map.size_y and coordY + l >= 0:
+                            if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
                                 if not self.arrayIsInList([coordX + k, coordY + l], boxes):
                                     boxes += [[coordX + k, coordY + l]]
         return boxes
@@ -228,6 +228,8 @@ class Brain:
         newMoves1 = []
         scoreMax = 0
         for move in valueMoves:
+            # print Brain.deleteZeroMoves([move])
+            # print self.heuristic1(move)
             if scoreMax == 0:
                 scoreMax = self.heuristic1(move)
                 newMoves1 = [move]
@@ -242,6 +244,8 @@ class Brain:
         newMoves2 = []
         scoreMax = 0
         for move in newMoves1:
+            # print Brain.deleteZeroMoves([move])
+            # print self.heuristic2(move, boxes, group[1])
             if scoreMax == 0:
                 scoreMax = self.heuristic2(move, boxes, group[1])
                 newMoves2 = [move]
@@ -253,6 +257,8 @@ class Brain:
                     newMoves2 = [move]
 
         i = randint(0,len(newMoves2)-1)
+        # print len(boxes)
+        # print Brain.deleteZeroMoves(newMoves2)
         return newMoves2[i]
 
     def heuristic1(self, move):
@@ -269,7 +275,7 @@ class Brain:
                 for enemy in enemies:
                     distTargetEnemy += [max(abs(target[1][0]-enemy[1][0]),abs(target[1][1]-enemy[1][1]))]
                 distMinEnemy = min(distTargetEnemy)
-                if distMinEnemy <  max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])): # Distance subgroup target
+                if distMinEnemy <= max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])): # Distance subgroup target
                     score += 0
                 else:
                     if subgroup[0] < target[0]:
@@ -415,22 +421,20 @@ class Brain:
 
         return nonZeroMoves
 
-    # Tests everything
+    # Returns moves to the server
     def returnMoves(self):
         moves=[]
         if self.side==1:
             for i in range(len(self.currentmap.werewolves)):
                 boxes = self.generateValueBoxes(i)
                 valueMoves = self.generateValueMoves(boxes, self.currentmap.werewolves[i][0])
-                moves += [self.chooseMove(valueMoves)]
+                moves += [self.chooseMove(valueMoves, boxes, self.currentmap.werewolves[i])]
         else:
             for i in range(len(self.currentmap.vampires)):
                 boxes = self.generateValueBoxes(i)
                 valueMoves = self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
                 moves += [self.chooseMove(valueMoves, boxes, self.currentmap.vampires[i])]
 
-        # L = [[1,2],[3,4,5],[6,7]]
-        # print(Brain.generateMoves(L))
-        # print(len(Brain.generateMoves(L)))
+        # print Brain.deleteZeroMoves(moves)
 
         return self.createMOV(Brain.deleteZeroMoves(moves))
