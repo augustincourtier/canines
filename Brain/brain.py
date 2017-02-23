@@ -182,7 +182,14 @@ class Brain:
                 if max(abs(i[1][0]-j[1][0]),abs(i[1][1]-j[1][1]))<=1:
                     mov.append(j)
                 if len(mov)==1:
-                    #voir MOV
+
+                elif len(mov)!=1:
+                    nbr=0
+                    for k in mov:
+                        nbr+=k[0]
+                    if k==j[0]:
+
+
 
 
 
