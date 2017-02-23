@@ -223,22 +223,41 @@ class Brain:
         return valueMoves
 
     def chooseMove(self, valueMoves, boxes, group):
-        # TODO: choose the move to do based on the result of findTargetHumans() and other input
+        print "-------------------"
+        print "heuristic 1"
+        print "-------------------"
+
         # first heuristic
         newMoves1 = []
         scoreMax = 0
+        scoreDistanceMax = 0
         for move in valueMoves:
             # print Brain.deleteZeroMoves([move])
             # print self.heuristic1(move)
+            heuristic1 =  self.heuristic1(move)
             if scoreMax == 0:
-                scoreMax = self.heuristic1(move)
+                scoreMax = heuristic1[0]
+                scoreDistanceMax = heuristic1[1]
                 newMoves1 = [move]
             else:
-                if scoreMax == self.heuristic1(move):
-                    newMoves1.append(move)
-                elif scoreMax < self.heuristic1(move):
-                    scoreMax = self.heuristic1(move)
+                if scoreMax == heuristic1[0]:
+                    if scoreDistanceMax == heuristic1[1]:
+                        newMoves1.append(move)
+                    elif scoreDistanceMax < heuristic1[1]:
+                        scoreDistanceMax = heuristic1[1]
+                        newMoves1 = [move]
+                elif scoreMax < heuristic1[0]:
+                    scoreMax = heuristic1[0]
+                    scoreDistanceMax = heuristic1[1]
                     newMoves1 = [move]
+
+        print "results"
+        print Brain.deleteZeroMoves(newMoves1)
+        print len(newMoves1)
+
+        print "-------------------"
+        print "heuristic 2"
+        print "-------------------"
 
         # second heuristic
         newMoves2 = []
@@ -246,21 +265,28 @@ class Brain:
         for move in newMoves1:
             # print Brain.deleteZeroMoves([move])
             # print self.heuristic2(move, boxes, group[1])
+            heuristic2 = self.heuristic2(move, boxes, group[1])
             if scoreMax == 0:
-                scoreMax = self.heuristic2(move, boxes, group[1])
+                scoreMax = heuristic2
                 newMoves2 = [move]
             else:
-                if scoreMax == self.heuristic2(move, boxes, group[1]):
+                if scoreMax == heuristic2:
                     newMoves2.append(move)
-                elif scoreMax < self.heuristic2(move, boxes, group[1]):
-                    scoreMax = self.heuristic2(move, boxes, group[1])
+                elif scoreMax < heuristic2:
+                    scoreMax = heuristic2
                     newMoves2 = [move]
 
+        print "results"
+        print Brain.deleteZeroMoves(newMoves2)
+        print len(newMoves2)
+
+        # Move is chosen randomly into the last sublist
         i = randint(0,len(newMoves2)-1)
-        # print len(boxes)
-        # print Brain.deleteZeroMoves(newMoves2)
         return newMoves2[i]
 
+
+    # This heuristic evulates what groups of human can the group reach before the ennemy and which of these
+    # groups can be beaten with the amount of allies
     def heuristic1(self, move):
         score = 0
         targets = self.currentmap.humans
@@ -281,11 +307,26 @@ class Brain:
                     if subgroup[0] < target[0]:
                         score += 0
                     else:
-                        if not self.arrayIsInList(target[1], goodTargets):
+                        if not self.arrayIsInList(target[1], [x[0][1] for x in goodTargets]) and subgroup[0] > 0:
+                            distTarget = float(max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1]))) + 1
+                            goodTargets += [[target, distTarget]]
                             score += target[0]
-                            goodTargets += [target[1]]
-        return score
+                        else:
+                            for targetWithDistance in goodTargets:
+                                if targetWithDistance[0] == target:
+                                    distTarget = float(max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1]))) + 1
+                                    if distTarget < targetWithDistance[1]:
+                                        targetWithDistance[1] = distTarget
 
+        # Taking distances into account
+        distanceScore = 0
+        for targetWithDistance in goodTargets:
+            distanceScore += float(targetWithDistance[0][0])/float(targetWithDistance[1])
+
+        return [score, distanceScore]
+
+    # This heuristic finds what group of human is naturally targeted on each box and evaluate the number of
+    # human that can be eaten when placing a group on a box, considering distances and the amount of the group
     def heuristic2(self, move, boxes, previousCoord):
         boxWithTargetHumans = self.findTargetHumans(boxes, previousCoord)
         score = 0
@@ -296,8 +337,14 @@ class Brain:
                     for target in boxWithTarget[1]:
                         peopleInTargets += [target[0]]
                     if subgroup[0] >= min(peopleInTargets):
-                        score += min(sum(peopleInTargets), subgroup[0])
+                        exempleTarget = boxWithTarget[1][0]
+                        distanceTargets = max(abs(exempleTarget[1][0]-subgroup[1][0]),abs(exempleTarget[1][1]-subgroup[1][1])) + 1
+                        # print ('distance', distanceTargets)
+                        # print ('score', min(sum(peopleInTargets), subgroup[0]))
+                        score += float(min(sum(peopleInTargets), subgroup[0]))/float(distanceTargets)
 
+
+        # print ('score final', score)
         return score
 
     # This function takes a move defined by index and the corresponding array of tuples
