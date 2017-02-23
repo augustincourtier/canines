@@ -1,7 +1,7 @@
 import Map.map
 from copy import deepcopy
 
-class Brain:
+class Brainold:
     def __init__(self, currentmap, side):
         self.currentmap = currentmap
         self.side = side #1=werewolf, -1=vampires

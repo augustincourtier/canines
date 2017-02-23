@@ -1,4 +1,4 @@
-from Brain import brain
+from Brain import brainold
 from Map import map
 
 vampire=[[10,[1,5]]]
@@ -8,7 +8,7 @@ mapTest=map.Map(vampire,werewolf,humans,25,25)
 
 print mapTest
 
-brain=brain.Brain(mapTest,0)
+brain=brainold.Brain(mapTest, 0)
 maps=brain.createMapsfromMap(0)
 
 for i in maps:
