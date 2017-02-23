@@ -2,6 +2,7 @@ import map
 import numpy as np
 from copy import deepcopy
 from random import randint
+import operator
 
 class Brain:
     def __init__(self, currentmap, side):
@@ -175,8 +176,10 @@ class Brain:
         map=self.currentmap
         if self.side==1:
             group = map.werewolves[i]
+            E = map.vampires
         else:
             group = map.vampires[i]
+            E = map.werewolves
 
         coordX = group[1][0]
         coordY = group[1][1]
@@ -184,12 +187,25 @@ class Brain:
         for j in range(1,group[0]+1):
             for k in [-1,0,1]:
                 for l in [-1,0,1]:
-                    for h in H:
-                        # box is interesting if going there make a group closer to humans TODO: also to ennemies or allies
-                        if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
-                            if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
-                                if not self.arrayIsInList([coordX + k, coordY + l], boxes):
-                                    boxes += [[coordX + k, coordY + l]]
+                    if len(H) > 0:
+                        for h in H:
+                            # box is interesting if going there make a group closer to humans TODO: also to ennemies or allies
+                            if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
+                                if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
+                                    if not self.arrayIsInList([coordX + k, coordY + l], boxes):
+                                        boxes += [[coordX + k, coordY + l]]
+                            for e in E:
+                                if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
+                                    if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
+                                        if not self.arrayIsInList([coordX + k, coordY + l], boxes):
+                                            boxes += [[coordX + k, coordY + l]]
+                    else:
+                        for e in E:
+                            if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
+                                if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
+                                    if not self.arrayIsInList([coordX + k, coordY + l], boxes):
+                                        boxes += [[coordX + k, coordY + l]]
+
         return boxes
 
     # this function generates all possibles subgroups from one original group and then choose valid possibilities (n subgroups with a total of people =  sizeOfOriginalGroup)
@@ -223,67 +239,135 @@ class Brain:
         return valueMoves
 
     def chooseMove(self, valueMoves, boxes, group):
-        print "-------------------"
-        print "heuristic 1"
-        print "-------------------"
 
-        # first heuristic
-        newMoves1 = []
-        scoreMax = 0
-        scoreDistanceMax = 0
-        for move in valueMoves:
-            # print Brain.deleteZeroMoves([move])
-            # print self.heuristic1(move)
-            heuristic1 =  self.heuristic1(move)
-            if scoreMax == 0:
-                scoreMax = heuristic1[0]
-                scoreDistanceMax = heuristic1[1]
-                newMoves1 = [move]
+        if len(self.currentmap.humans) > 0:
+            # Filters move to keep first those which allow to kill an adjacent group of enemy
+            valueMovesFiltered = []
+            for move in valueMoves:
+                filteredMove = self.enemyFilter(move)
+                if len(filteredMove) > 0:
+                    valueMovesFiltered.append(filteredMove)
+
+            if len(valueMovesFiltered) > 0:
+                moveFiltered = valueMovesFiltered
             else:
-                if scoreMax == heuristic1[0]:
-                    if scoreDistanceMax == heuristic1[1]:
-                        newMoves1.append(move)
-                    elif scoreDistanceMax < heuristic1[1]:
-                        scoreDistanceMax = heuristic1[1]
-                        newMoves1 = [move]
-                elif scoreMax < heuristic1[0]:
+                moveFiltered = valueMoves
+
+            # print len(Brain.deleteZeroMoves(moveFiltered))
+            # #
+            # print "-------------------"
+            # print "heuristic 1"
+            # print "-------------------"
+
+            # first heuristic
+            newMoves1 = []
+            scoreMax = 0
+            scoreDistanceMax = 0
+            for move in moveFiltered:
+
+                heuristic1 =  self.heuristic1(move)
+                # if heuristic1[0] == 14:
+                #     print "-----------"
+                #     print Brain.deleteZeroMoves([move])
+                #     print self.heuristic1(move)
+                #     print "-----------"
+
+                # print "-----------"
+                # print Brain.deleteZeroMoves([move])
+                # print self.heuristic1(move)
+                # print "-----------"
+
+                if scoreMax == 0:
                     scoreMax = heuristic1[0]
                     scoreDistanceMax = heuristic1[1]
                     newMoves1 = [move]
+                else:
+                    if scoreMax == heuristic1[0]:
+                        if scoreDistanceMax == heuristic1[1]:
+                            newMoves1.append(move)
+                        elif scoreDistanceMax < heuristic1[1]:
+                            scoreDistanceMax = heuristic1[1]
+                            newMoves1 = [move]
+                    elif scoreMax < heuristic1[0]:
+                        scoreMax = heuristic1[0]
+                        scoreDistanceMax = heuristic1[1]
+                        newMoves1 = [move]
+            #
+            print "results"
+            print Brain.deleteZeroMoves(newMoves1)
+            print len(newMoves1)
+            #
+            # print "-------------------"
+            # print "heuristic 2"
+            # print "-------------------"
 
-        print "results"
-        print Brain.deleteZeroMoves(newMoves1)
-        print len(newMoves1)
-
-        print "-------------------"
-        print "heuristic 2"
-        print "-------------------"
-
-        # second heuristic
-        newMoves2 = []
-        scoreMax = 0
-        for move in newMoves1:
-            # print Brain.deleteZeroMoves([move])
-            # print self.heuristic2(move, boxes, group[1])
-            heuristic2 = self.heuristic2(move, boxes, group[1])
-            if scoreMax == 0:
-                scoreMax = heuristic2
-                newMoves2 = [move]
-            else:
-                if scoreMax == heuristic2:
-                    newMoves2.append(move)
-                elif scoreMax < heuristic2:
+            # second heuristic
+            newMoves2 = []
+            scoreMax = 0
+            for move in newMoves1:
+                # print Brain.deleteZeroMoves([move])
+                # print self.heuristic2(move, boxes, group[1])
+                heuristic2 = self.heuristic2(move, boxes, group[1])
+                if scoreMax == 0:
                     scoreMax = heuristic2
                     newMoves2 = [move]
+                else:
+                    if scoreMax == heuristic2:
+                        newMoves2.append(move)
+                    elif scoreMax < heuristic2:
+                        scoreMax = heuristic2
+                        newMoves2 = [move]
 
-        print "results"
-        print Brain.deleteZeroMoves(newMoves2)
-        print len(newMoves2)
+            # print "results"
+            # print Brain.deleteZeroMoves(newMoves2)
+            # print len(newMoves2)
 
-        # Move is chosen randomly into the last sublist
-        i = randint(0,len(newMoves2)-1)
-        return newMoves2[i]
+            newMoves2 = self.splitFilter(Brain.deleteZeroMoves(newMoves2))
+            # print "---------------------"
+            # print newMoves2
 
+            # Move is chosen randomly into the last sublist
+            i = randint(0,len(newMoves2)-1)
+            # print len(newMoves2)
+            return newMoves2[i]
+        else:
+            valueMoves = self.splitFilter(Brain.deleteZeroMoves(valueMoves))
+            # Move is chosen randomly into the last sublist
+            i = randint(0,len(valueMoves)-1)
+            # print len(newMoves2)
+            return valueMoves[i]
+
+    # This filter chooses moves that allow to kill directly a group of ennemy
+    def enemyFilter(self, move):
+
+        if self.side == 1:
+            enemies = self.currentmap.vampires
+        else:
+            enemies = self.currentmap.werewolves
+
+        for subgroup in move:
+            for enemy in enemies:
+                if float(subgroup[0]) >= 1.5*float(enemy[0]) and max(abs(subgroup[1][0]-enemy[1][0]),abs(subgroup[1][1]-enemy[1][1])) == 0:
+                    return move
+
+        return []
+
+    # This function takes equivalent moves and return those where the group is the less splitted
+    def splitFilter(self, moves):
+        filteredMoves = []
+        minSplit = 0
+
+        for move in moves:
+            if len(filteredMoves) == 0:
+                filteredMoves = [move]
+                minSplit = len(move)
+            else:
+                if len(move) == minSplit:
+                    filteredMoves += [move]
+                elif len(move) < minSplit:
+                    filteredMoves = [move]
+
+        return filteredMoves
 
     # This heuristic evulates what groups of human can the group reach before the ennemy and which of these
     # groups can be beaten with the amount of allies
@@ -330,22 +414,41 @@ class Brain:
     def heuristic2(self, move, boxes, previousCoord):
         boxWithTargetHumans = self.findTargetHumans(boxes, previousCoord)
         score = 0
+        visitedTarget = []
         for subgroup in move:
+            attack = subgroup[0]
             for boxWithTarget in boxWithTargetHumans:
-                if subgroup[1] == boxWithTarget[0]:
+                if len(boxWithTarget[1]) == 0:
+                    score += 0
+                elif subgroup[1] == boxWithTarget[0]:
                     peopleInTargets = []
-                    for target in boxWithTarget[1]:
-                        peopleInTargets += [target[0]]
-                    if subgroup[0] >= min(peopleInTargets):
-                        exempleTarget = boxWithTarget[1][0]
-                        distanceTargets = max(abs(exempleTarget[1][0]-subgroup[1][0]),abs(exempleTarget[1][1]-subgroup[1][1])) + 1
-                        # print ('distance', distanceTargets)
-                        # print ('score', min(sum(peopleInTargets), subgroup[0]))
-                        score += float(min(sum(peopleInTargets), subgroup[0]))/float(distanceTargets)
+                    for target in Brain.sortHumanByNumber(boxWithTarget[1]):
+                        if not self.arrayIsInList(target[1], visitedTarget):
+                            if attack >= target[0]:
+                                attack -= target[0]
+                                visitedTarget += [target[1]]
 
+                                distanceTargets = max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])) + 1
+                                score += float(target[0])/float(distanceTargets)
 
         # print ('score final', score)
         return score
+
+    @staticmethod
+    def sortHumanByNumber(humans):
+        humanIndexes = []
+        result = []
+        for i in range(len(humans)):
+            humanIndexes.append([humans[i][0], i])
+
+
+        humanIndexes.sort(key=operator.itemgetter(0))
+        humanIndexes.reverse()
+
+        for humanIndex in humanIndexes:
+            result.append(humans[humanIndex[1]])
+
+        return result
 
     # This function takes a move defined by index and the corresponding array of tuples
     # and returns the sum of characters of that move

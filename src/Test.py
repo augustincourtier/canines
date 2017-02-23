@@ -2,10 +2,15 @@ from brain import Brain
 import numpy as np
 import map
 
-vampire=[[4, [4, 1]]]
-werewolf=[[4, [4, 3]]]
-humans=[[2, [9, 0]], [4, [2, 2]], [1, [9, 2]], [2, [9, 4]]]
-mapTest=map.Map(vampire,werewolf,humans,10,5)
+vampire=[[6, [1, 7]]]
+werewolf=[[5, [7, 3]]]
+humans=[[5, [2, 1]], [3, [7, 8]], [3, [4, 7]], [5, [5, 2]], [8, [3, 6]], [10, [6, 3]], [1, [0, 5]], [1, [9, 4]]]
+
+# vampire=[[4, [9, 0]], [4, [9, 4]]]
+# werewolf=[[8, [6, 0]]]
+# humans=[[1, [9, 2]]]
+
+mapTest=map.Map(vampire,werewolf,humans,10,10)
 
 # print mapTest
 
