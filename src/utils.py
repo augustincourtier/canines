@@ -73,3 +73,6 @@ def sort_human_by_number(humans):
     for humanIndex in human_indexes:
         result.append(humans[humanIndex[1]])
     return result
+
+
+# def

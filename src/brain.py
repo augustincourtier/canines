@@ -5,6 +5,7 @@ from random import randint
 import operator
 from src.utils import min_index, prob_against_humans
 from src.heuristics import *
+from src.prepare_moves import *
 
 
 class Brain:
@@ -71,71 +72,69 @@ class Brain:
     # ALEX AND ELIE tests
     ####
 
-    # this function gives interesting boxes around one group
-    def generateValueBoxes(self, i):
+    def generateValueBoxes(self, given_group):
+        """this function gives interesting boxes around one group"""
         boxes = [] # this arrays stores interesting boxes around a group
         H = self.currentmap.humans
-        map = self.currentmap
+        given_map = self.currentmap
+        max_x, max_y = given_map.size_x, given_map.size_y
         if self.side == 1:
-            group, enemies = map.werewolves[i], map.vampires
+            group, enemies = given_map.werewolves[given_group], given_map.vampires
         else:
-            group, enemies = map.vampires[i], map.werewolves
-        coordX = group[1][0]
-        coordY = group[1][1]
+            group, enemies = given_map.vampires[given_group], given_map.werewolves
+        coordX, coordY = group[1][0], group[1][1]
 
-        for j in range(1,group[0]+1):
-            for k in [-1,0,1]:
-                for l in [-1,0,1]:
+        for j in range(1, group[0]+1):
+            for k in [-1, 0, 1]:
+                for l in [-1, 0, 1]:
                     if len(H) > 0:
                         for h in H:
                             # box is interesting if going there make a group closer to humans TODO: also to ennemies or allies
-                            if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
-                                if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
+                            if max(abs(coordX - h[1][0]), abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
+                                if (0 <= coordX + k <= max_x-1) and (0 <= coordY + l <= max_y-1):
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                         boxes += [[coordX + k, coordY + l]]
                             for e in enemies:
                                 if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
-                                    if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
+                                    if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                                         if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                             boxes += [[coordX + k, coordY + l]]
                     else:
                         for e in enemies:
                             if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
-                                if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
+                                if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                         boxes += [[coordX + k, coordY + l]]
-
         return boxes
 
-    # this function generates all possibles subgroups from one original group and then choose valid possibilities (n subgroups with a total of people =  sizeOfOriginalGroup)
-    def generateValueMoves(self, valueBoxes, sizeOfOriginalGroup):
-        possibleTuples = [] #this will store each possible tuples for one valid box (ex 1 guy on the box, 2 guys etc..)
-        for i in range(len(valueBoxes)):
-            possibleTuplesForOneBox = []
-
-            for j in range(0, sizeOfOriginalGroup+1):
-                possibleTuplesForOneBox += [[j, [valueBoxes[i][0], valueBoxes[i][1]]]]
-            possibleTuples += [possibleTuplesForOneBox]
+    def generate_value_moves(self, value_boxes, size_of_original_group):
+        """this function generates all possibles subgroups from one original group,
+        and then choose valid possibilities (n subgroups with a total of people =  sizeOfOriginalGroup)"""
+        possible_tuples = []  # store each possible tuples for one valid box (ex 1 guy on the box, 2 guys etc..)
+        for i in range(len(value_boxes)):
+            possible_tuples_for_one_box = []
+            for j in range(0, size_of_original_group+1):
+                possible_tuples_for_one_box += [[j, [value_boxes[i][0], value_boxes[i][1]]]]
+            possible_tuples += [possible_tuples_for_one_box]
 
         # this array contains the list of possibilities for each valueBoxes (0 on the first box, or 1 or 2 and so on..)
-        possibleTuples = list_of_lists_to_list(possibleTuples)
-
-        # this array represents "possibleTuples" with index (integers) instead of tuples
-        indexArray = Brain.generateIndexArray(len(valueBoxes), sizeOfOriginalGroup)
+        possible_tuples = list_of_lists_to_list(possible_tuples)
+        # this array represents "possible_tuples" with index (integers) instead of tuples
+        index_array = generate_index_array(len(value_boxes), size_of_original_group)
         # this array still contains indexes
-        possibleMoves = Brain.generateMoves(indexArray)
+        possible_moves = generate_moves(index_array)
 
-        valueMoves = []
-        for indexMove in possibleMoves:
+        value_moves = []
+        for indexMove in possible_moves:
             # eliminating with sumOfMove() combinations that don't give exactly sizeOfOriginalGroup characters in total
-            if Brain.sumOfMove(indexMove, possibleTuples) == sizeOfOriginalGroup:
-                realMove = []
+            if sum_of_move(indexMove, possible_tuples) == size_of_original_group:
+                real_move = []
                 # converting indexes into tuples [n, [x,y]]
                 for index in indexMove:
-                    realMove += [possibleTuples[index]]
-                valueMoves += [realMove]
+                    real_move += [possible_tuples[index]]
+                value_moves += [real_move]
 
-        return valueMoves
+        return value_moves
 
     def chooseMove(self, valueMoves, boxes, group):
 
@@ -311,7 +310,7 @@ class Brain:
     # This heuristic finds what group of human is naturally targeted on each box and evaluate the number of
     # human that can be eaten when placing a group on a box, considering distances and the amount of the group
     def heuristic2(self, move, boxes, previousCoord):
-        boxWithTargetHumans = self.findTargetHumans(boxes, previousCoord)
+        boxWithTargetHumans = self.find_target_humans(boxes, previousCoord)
         score = 0
         visitedTarget = []
         for subgroup in move:
@@ -333,82 +332,30 @@ class Brain:
         # print ('score final', score)
         return score
 
-    # This function takes a move defined by index and the corresponding array of tuples
-    # and returns the sum of characters of that move
-    @staticmethod
-    def sumOfMove(indexMove, tuples):
-        total = 0
-        for index in indexMove:
-            total += tuples[index][0] # the first elem of a tuple [n, [x,y]] is the number of character
-        return total
-
-    # This function generates an array containing boxNumber arrays of groupSize elements
-    # each element is and index in range 0 -- boxNumber*groupSize -1
-    @staticmethod
-    def generateIndexArray(boxNumber, groupSize):
-        index = 0
-        result = []
-        for i in range(0, boxNumber):
-            subarray = []
-            for j in range(0, groupSize+1):
-                subarray += [index]
-                index += 1
-            result += [subarray]
-        return result
-
-    # This function is used to generate an array containing all possibilities of one pick in n arrays
-    # of m integer elements. (on possibility is equivalent to a move)
-    # ex : [[1,2],[3,4]] => [[1,3],[1,4],[2,3],[2,4]]
-    @staticmethod
-    def generateMoves(list):
-        result = []
-        if list == []:
-            result +=[]
-        else:
-            for i in list[0]:
-                result += Brain.distribute(i, Brain.generateMoves(list[1:]))
-        return result
-
-    # This function is used to distribute a value on an array of arrays
-    # ex : [1,[1,2],[3,4]] => [[1,1,2],[1,3,4]]
-    @staticmethod
-    def distribute(element, lists):
-        new_list = []
-        if not lists:
-            return [[element]]
-        elif isinstance(lists[0], int):
-            new_list = [lists+[element]]
-            return new_list
-        else:
-            for list in lists:
-                list += [element]
-                new_list += [list]
-            return new_list
-
-    # This function finds the closest group of humans (and biggest if equality) from each box in boxes
-    # the paramater previousCoord is used to keep consistancy in moves : if a group of human is closer than other groups
-    # from a box but farer than the previous box, then the goal is not to got toward this group of human
-    def findTargetHumans(self, boxes, previousCoord):
+    def find_target_humans(self, boxes, previous_coord):
+        """This function finds the closest group of humans (and biggest if equality) from each box in boxes
+        the paramater previousCoord is used to keep consistancy in moves : if a group of human is closer than other groups
+        from a box but farer than the previous box, then the goal is not to got toward this group of human"""
         H = self.currentmap.humans
-        boxWithTargetHumans = []
+        box_with_target_humans = []
         for box in boxes:
-            targetHumans = []
-            closestHumans = []
+            target_humans = []
+            closest_humans = []
             for h in H:
-                if max(abs(previousCoord[0] - h[1][0]),abs(previousCoord[1] - h[1][1])) > max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
-                    if closestHumans == []:
-                        closestHumans = [h[0],[h[1][0], h[1][1]]]
-                        targetHumans = [[h[0],[h[1][0], h[1][1]]]]
+                if max(abs(previous_coord[0] - h[1][0]), abs(previous_coord[1] - h[1][1])) > max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
+                    if not closest_humans:
+                        closest_humans = [h[0],[h[1][0], h[1][1]]]
+                        target_humans = [[h[0],[h[1][0], h[1][1]]]]
                     else:
-                        if max(abs(box[0] - closestHumans[1][0]), abs(box[1] - closestHumans[1][1])) == max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
-                            targetHumans.append([h[0],[h[1][0], h[1][1]]])
-                        elif max(abs(box[0] - closestHumans[1][0]), abs(box[1] - closestHumans[1][1])) >= max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
-                            closestHumans = [h[0],[h[1][0], h[1][1]]]
-                            targetHumans = [[h[0],[h[1][0], h[1][1]]]]
+                        if max(abs(box[0] - closest_humans[1][0]), abs(box[1] - closest_humans[1][1])) == max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
+                            target_humans.append([h[0],[h[1][0], h[1][1]]])
+                        elif max(abs(box[0] - closest_humans[1][0]), abs(box[1] - closest_humans[1][1])) >= max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
+                            closest_humans = [h[0],[h[1][0], h[1][1]]]
+                            target_humans = [[h[0],[h[1][0], h[1][1]]]]
 
-            boxWithTargetHumans += [[box, targetHumans]]
+            box_with_target_humans += [[box, target_humans]]
 
-        return boxWithTargetHumans
+        return box_with_target_humans
 
     # This function create MOV that can be sent to server from an array of moves
     def createMOV(self, moves):
@@ -432,12 +379,12 @@ class Brain:
         if self.side == 1:
             for i in range(len(self.currentmap.werewolves)):
                 boxes = self.generateValueBoxes(i)
-                valueMoves = self.generateValueMoves(boxes, self.currentmap.werewolves[i][0])
-                moves += [self.chooseMove(valueMoves, boxes, self.currentmap.werewolves[i])]
+                value_moves = self.generate_value_moves(boxes, self.currentmap.werewolves[i][0])
+                moves += [self.chooseMove(value_moves, boxes, self.currentmap.werewolves[i])]
         else:
             for i in range(len(self.currentmap.vampires)):
                 boxes = self.generateValueBoxes(i)
-                valueMoves = self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
-                moves += [self.chooseMove(valueMoves, boxes, self.currentmap.vampires[i])]
+                value_moves = self.generate_value_moves(boxes, self.currentmap.vampires[i][0])
+                moves += [self.chooseMove(value_moves, boxes, self.currentmap.vampires[i])]
 
         return self.createMOV(delete_zero_moves(moves))
