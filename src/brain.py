@@ -2,9 +2,6 @@ import map
 import numpy as np
 from copy import deepcopy
 from random import randint
-import operator
-from src.utils import min_index, prob_against_humans
-from src.heuristics import *
 from src.prepare_moves import *
 
 
@@ -72,7 +69,7 @@ class Brain:
     # ALEX AND ELIE tests
     ####
 
-    def generateValueBoxes(self, given_group):
+    def generate_value_boxes(self, given_group):
         """this function gives interesting boxes around one group"""
         boxes = [] # this arrays stores interesting boxes around a group
         H = self.currentmap.humans
@@ -107,224 +104,136 @@ class Brain:
                                         boxes += [[coordX + k, coordY + l]]
         return boxes
 
-    def generate_value_moves(self, value_boxes, size_of_original_group):
-        """this function generates all possibles subgroups from one original group,
-        and then choose valid possibilities (n subgroups with a total of people =  sizeOfOriginalGroup)"""
-        possible_tuples = []  # store each possible tuples for one valid box (ex 1 guy on the box, 2 guys etc..)
-        for i in range(len(value_boxes)):
-            possible_tuples_for_one_box = []
-            for j in range(0, size_of_original_group+1):
-                possible_tuples_for_one_box += [[j, [value_boxes[i][0], value_boxes[i][1]]]]
-            possible_tuples += [possible_tuples_for_one_box]
+    def choose_move(self, value_moves, boxes, group):
 
-        # this array contains the list of possibilities for each valueBoxes (0 on the first box, or 1 or 2 and so on..)
-        possible_tuples = list_of_lists_to_list(possible_tuples)
-        # this array represents "possible_tuples" with index (integers) instead of tuples
-        index_array = generate_index_array(len(value_boxes), size_of_original_group)
-        # this array still contains indexes
-        possible_moves = generate_moves(index_array)
+        if len(self.currentmap.humans) > 0:  # If there are still humans on the map
 
-        value_moves = []
-        for indexMove in possible_moves:
-            # eliminating with sumOfMove() combinations that don't give exactly sizeOfOriginalGroup characters in total
-            if sum_of_move(indexMove, possible_tuples) == size_of_original_group:
-                real_move = []
-                # converting indexes into tuples [n, [x,y]]
-                for index in indexMove:
-                    real_move += [possible_tuples[index]]
-                value_moves += [real_move]
-
-        return value_moves
-
-    def chooseMove(self, valueMoves, boxes, group):
-
-        if len(self.currentmap.humans) > 0:
             # Filters move to keep first those which allow to kill an adjacent group of enemy
-            valueMovesFiltered = []
-            for move in valueMoves:
-                filteredMove = self.enemyFilter(move)
-                if len(filteredMove) > 0:
-                    valueMovesFiltered.append(filteredMove)
-
-            if len(valueMovesFiltered) > 0:
-                moveFiltered = valueMovesFiltered
+            value_moves_filtered = []
+            for move in value_moves:
+                filtered_move = self.enemy_filter(move)
+                if len(filtered_move) > 0:
+                    value_moves_filtered.append(filtered_move)
+            if len(value_moves_filtered) > 0:
+                move_filtered = value_moves_filtered
             else:
-                moveFiltered = valueMoves
-
-            # print len(deleteZeroMoves(moveFiltered))
-            # #
-            # print "-------------------"
-            # print "heuristic 1"
-            # print "-------------------"
+                move_filtered = value_moves
 
             # first heuristic
-            newMoves1 = []
-            scoreMax = 0
-            scoreDistanceMax = 0
-            for move in moveFiltered:
-
-                heuristic1 =  self.heuristic1(move)
-                # if heuristic1[0] == 14:
-                #     print "-----------"
-                #     print deleteZeroMoves([move])
-                #     print self.heuristic1(move)
-                #     print "-----------"
-
-                # print "-----------"
-                # print deleteZeroMoves([move])
-                # print self.heuristic1(move)
-                # print "-----------"
-
-                if scoreMax == 0:
-                    scoreMax = heuristic1[0]
-                    scoreDistanceMax = heuristic1[1]
-                    newMoves1 = [move]
+            new_moves1 = []
+            score_max = 0
+            score_distance_max = 0
+            for move in move_filtered:
+                heuristic1 = self.heuristic1(move)
+                if score_max == 0:
+                    score_max = heuristic1[0]
+                    score_distance_max = heuristic1[1]
+                    new_moves1 = [move]
                 else:
-                    if scoreMax == heuristic1[0]:
-                        if scoreDistanceMax == heuristic1[1]:
-                            newMoves1.append(move)
-                        elif scoreDistanceMax < heuristic1[1]:
-                            scoreDistanceMax = heuristic1[1]
-                            newMoves1 = [move]
-                    elif scoreMax < heuristic1[0]:
-                        scoreMax = heuristic1[0]
-                        scoreDistanceMax = heuristic1[1]
-                        newMoves1 = [move]
-            #
-            print("results")
-            print(delete_zero_moves(newMoves1))
-            print(len(newMoves1))
-            #
-            # print "-------------------"
-            # print "heuristic 2"
-            # print "-------------------"
+                    if score_max == heuristic1[0]:
+                        if score_distance_max == heuristic1[1]:
+                            new_moves1.append(move)
+                        elif score_distance_max < heuristic1[1]:
+                            score_distance_max = heuristic1[1]
+                            new_moves1 = [move]
+                    elif score_max < heuristic1[0]:
+                        score_max = heuristic1[0]
+                        score_distance_max = heuristic1[1]
+                        new_moves1 = [move]
 
             # second heuristic
-            newMoves2 = []
-            scoreMax = 0
-            for move in newMoves1:
-                # print deleteZeroMoves([move])
-                # print self.heuristic2(move, boxes, group[1])
+            new_moves2 = []
+            score_max = 0
+            for move in new_moves1:
                 heuristic2 = self.heuristic2(move, boxes, group[1])
-                if scoreMax == 0:
-                    scoreMax = heuristic2
-                    newMoves2 = [move]
+                if score_max == 0:
+                    score_max = heuristic2
+                    new_moves2 = [move]
                 else:
-                    if scoreMax == heuristic2:
-                        newMoves2.append(move)
-                    elif scoreMax < heuristic2:
-                        scoreMax = heuristic2
-                        newMoves2 = [move]
+                    if score_max == heuristic2:
+                        new_moves2.append(move)
+                    elif score_max < heuristic2:
+                        score_max = heuristic2
+                        new_moves2 = [move]
+            new_moves2 = split_filter(delete_zero_moves(new_moves2))
 
-            # print "results"
-            # print deleteZeroMoves(newMoves2)
-            # print len(newMoves2)
-
-            newMoves2 = self.splitFilter(delete_zero_moves(newMoves2))
-            # print "---------------------"
-            # print newMoves2
-
-            # Move is chosen randomly into the last sublist
-            i = randint(0,len(newMoves2)-1)
-            # print len(newMoves2)
-            return newMoves2[i]
+            i = randint(0, len(new_moves2)-1)  # Move is chosen randomly into the last sublist
+            return new_moves2[i]
         else:
-            valueMoves = self.splitFilter(delete_zero_moves(valueMoves))
-            # Move is chosen randomly into the last sublist
-            i = randint(0,len(valueMoves)-1)
-            # print len(newMoves2)
-            return valueMoves[i]
+            value_moves = split_filter(delete_zero_moves(value_moves))
+            i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
+            return value_moves[i]
 
-    # This filter chooses moves that allow to kill directly a group of ennemy
-    def enemyFilter(self, move):
-
+    def enemy_filter(self, move):
+        """This filter chooses moves that allow to kill directly a group of enemies"""
         if self.side == 1:
             enemies = self.currentmap.vampires
         else:
             enemies = self.currentmap.werewolves
-
         for subgroup in move:
             for enemy in enemies:
-                if float(subgroup[0]) >= 1.5*float(enemy[0]) and max(abs(subgroup[1][0]-enemy[1][0]),abs(subgroup[1][1]-enemy[1][1])) == 0:
+                if float(subgroup[0]) >= 1.5*float(enemy[0]) \
+                        and max(abs(subgroup[1][0]-enemy[1][0]), abs(subgroup[1][1]-enemy[1][1])) == 0:
                     return move
-
         return []
 
-    # This function takes equivalent moves and return those where the group is the less splitted
-    def splitFilter(self, moves):
-        filteredMoves = []
-        minSplit = 0
-
-        for move in moves:
-            if len(filteredMoves) == 0:
-                filteredMoves = [move]
-                minSplit = len(move)
-            else:
-                if len(move) == minSplit:
-                    filteredMoves += [move]
-                elif len(move) < minSplit:
-                    filteredMoves = [move]
-
-        return filteredMoves
-
-    # This heuristic evulates what groups of human can the group reach before the ennemy and which of these
-    # groups can be beaten with the amount of allies
     def heuristic1(self, move):
-        score = 0
+        """This heuristic evulates what groups of human can the group reach before the ennemy and which of these
+        groups can be beaten with the amount of allies"""
+        score, good_targets = 0, []
         targets = self.currentmap.humans
-        goodTargets = []
         for subgroup in move:
             if self.side == 1:
                 enemies = self.currentmap.vampires
             else:
                 enemies = self.currentmap.werewolves
             for target in targets:
-                distTargetEnemy = []
+                dist_target_enemy = []
                 for enemy in enemies:
-                    distTargetEnemy += [max(abs(target[1][0]-enemy[1][0]),abs(target[1][1]-enemy[1][1]))]
-                distMinEnemy = min(distTargetEnemy)
-                if distMinEnemy <= max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])): # Distance subgroup target
+                    dist_target_enemy += [max(abs(target[1][0]-enemy[1][0]), abs(target[1][1]-enemy[1][1]))]
+                dist_min_enemy = min(dist_target_enemy)
+                if dist_min_enemy <= max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1])):
                     score += 0
                 else:
                     if subgroup[0] < target[0]:
                         score += 0
                     else:
-                        if not list_in_list_of_lists(target[1], [x[0][1] for x in goodTargets]) and subgroup[0] > 0:
-                            distTarget = float(max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1]))) + 1
-                            goodTargets += [[target, distTarget]]
+                        if not list_in_list_of_lists(target[1], [x[0][1] for x in good_targets]) and subgroup[0] > 0:
+                            dist_target = float(max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1]))) + 1
+                            good_targets += [[target, dist_target]]
                             score += target[0]
                         else:
-                            for targetWithDistance in goodTargets:
+                            for targetWithDistance in good_targets:
                                 if targetWithDistance[0] == target:
-                                    distTarget = float(max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1]))) + 1
-                                    if distTarget < targetWithDistance[1]:
-                                        targetWithDistance[1] = distTarget
+                                    dist_target = float(max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1]))) + 1
+                                    if dist_target < targetWithDistance[1]:
+                                        targetWithDistance[1] = dist_target
 
         # Taking distances into account
-        distanceScore = 0
-        for targetWithDistance in goodTargets:
-            distanceScore += float(targetWithDistance[0][0])/float(targetWithDistance[1])
+        distance_score = 0
+        for targetWithDistance in good_targets:
+            distance_score += float(targetWithDistance[0][0])/float(targetWithDistance[1])
 
-        return [score, distanceScore]
+        return [score, distance_score]
 
-    # This heuristic finds what group of human is naturally targeted on each box and evaluate the number of
-    # human that can be eaten when placing a group on a box, considering distances and the amount of the group
     def heuristic2(self, move, boxes, previousCoord):
-        boxWithTargetHumans = self.find_target_humans(boxes, previousCoord)
+        """This heuristic finds what group of human is naturally targeted on each box and evaluate the number of
+        human that can be eaten when placing a group on a box, considering distances and the amount of the group"""
+        box_with_target_humans = self.find_target_humans(boxes, previousCoord)
         score = 0
-        visitedTarget = []
+        visited_target = []
         for subgroup in move:
             attack = subgroup[0]
-            for boxWithTarget in boxWithTargetHumans:
+            for boxWithTarget in box_with_target_humans:
                 if len(boxWithTarget[1]) == 0:
                     score += 0
                 elif subgroup[1] == boxWithTarget[0]:
                     peopleInTargets = []
                     for target in sort_human_by_number(boxWithTarget[1]):
-                        if not list_in_list_of_lists(target[1], visitedTarget):
+                        if not list_in_list_of_lists(target[1], visited_target):
                             if attack >= target[0]:
                                 attack -= target[0]
-                                visitedTarget += [target[1]]
+                                visited_target += [target[1]]
 
                                 distanceTargets = max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])) + 1
                                 score += float(target[0])/float(distanceTargets)
@@ -378,13 +287,13 @@ class Brain:
         moves = []
         if self.side == 1:
             for i in range(len(self.currentmap.werewolves)):
-                boxes = self.generateValueBoxes(i)
-                value_moves = self.generate_value_moves(boxes, self.currentmap.werewolves[i][0])
-                moves += [self.chooseMove(value_moves, boxes, self.currentmap.werewolves[i])]
+                boxes = self.generate_value_boxes(i)
+                value_moves = generate_value_moves(boxes, self.currentmap.werewolves[i][0])
+                moves += [self.choose_move(value_moves, boxes, self.currentmap.werewolves[i])]
         else:
             for i in range(len(self.currentmap.vampires)):
-                boxes = self.generateValueBoxes(i)
-                value_moves = self.generate_value_moves(boxes, self.currentmap.vampires[i][0])
-                moves += [self.chooseMove(value_moves, boxes, self.currentmap.vampires[i])]
+                boxes = self.generate_value_boxes(i)
+                value_moves = generate_value_moves(boxes, self.currentmap.vampires[i][0])
+                moves += [self.choose_move(value_moves, boxes, self.currentmap.vampires[i])]
 
         return self.createMOV(delete_zero_moves(moves))
