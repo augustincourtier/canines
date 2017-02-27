@@ -15,7 +15,7 @@ mapTest=map.Map(vampire,werewolf,humans,10,10)
 # print mapTest
 
 brain=Brain(mapTest,1)
-maps=brain.returnMoves()
+maps=brain.return_moves()
 
 # for i in maps:
 #     print ("new map")

@@ -3,166 +3,68 @@ import numpy as np
 from copy import deepcopy
 from random import randint
 import operator
+from src.utils import min_index, prob_against_humans
+from src.heuristics import *
+
 
 class Brain:
+
     def __init__(self, currentmap, side):
         self.currentmap = currentmap
-        self.side = side #1=werewolf, -1=vampires
+        self.side = side  # 1=werewolf, -1=vampires
 
     ####
     # GENERAL FUNCTIONS OF BRAIN
     ####
 
-    def minIndex(self, list):
-        index=0
-        min=0
-        for i in range(len(list)):
-            if list[i]<min:
-                index=i
-                min=list[i]
-        return index
-
     def score(self):
-        ww=self.currentmap.werewolf
-        vamp=self.currentmap.vamp
-        nbww = 0
-        nbvamp = 0
+        ww = self.currentmap.werewolf
+        vamp = self.currentmap.vamp
+        nb_ww = 0
+        nb_vamp = 0
         for i in ww:
-            nbww=nbww+i[2]
+            nb_ww = nb_ww + i[2]
         for j in vamp:
-            nbvamp=nbvamp+j[2]
-        return self.side*(nbww-nbvamp)
-
-    def probaH(self, grp1, grp2):
-        if grp1<grp2:
-            return grp1/(2*grp2)
-        elif grp1>=grp2:
-            return 1
-        else:
-            return 0
-
-    def heuristic(self, map,camp):
-        H=map.humans
-        V=map.vampires
-        W=map.werewolves
-        nombreH=len(H)
-        nombreV=len(V)
-        nombreW=len(W)
-
-        #calcul des distances entre tous les groupes
-        distHW=[]
-        distVW=[]
-        distHV=[]
-        for i in range(nombreH):
-            distHW[i]=[]
-            for j in range(nombreW):
-                distHW[i][j]=max(abs(H[i][1][0]-W[i][1][0]),abs(H[i][1][1]-W[i][1][1]))
-        for i in range(nombreV):
-            distVW[i]=[]
-            for j in range(nombreW):
-                distVW[i][j] = max(abs(V[i][1][0] - W[i][1][0]), abs(V[i][1][1] - W[i][1][1]))
-        for i in range(nombreH):
-            distHV[i]=[]
-            for j in range(nombreV):
-                distHV[i][j] = max(abs(H[i][1][0] - V[i][1][0]), abs(H[i][1][1] - V[i][1][1]))
-
-        # calcul des proba de gagner les humains
-        probaW = []
-        probaV = []
-        for i in range(nombreH):
-            probaW[i] = []
-            for j in range(nombreW):
-                probaW[i][j]=self.probaH(W[i][0],H[j][0])
-        for i in range(nombreH):
-            probaV[i] = []
-            for j in range(nombreV):
-                probaV[i][j]=self.probaH(V[i][0],H[j][0])
-
-        #calcul des score
-        captureH=[]
-        for i in range(nombreH):
-            captureH[i]=[]
-            if min(distHV[i])<min(distHW):
-                captureH[i][0]='V'
-                index=self.minIndex(distHV[i])
-                captureH[i][1]=min(distHV[i])*pow(probaV[i][index],2)
-            elif min(distHV[i])>min(distHW):
-                captureH[i][0]='W'
-                index=self.minIndex(distHW[i])
-                captureH[i][1]=min(distHW[i])*pow(probaW[i][index],2)
-            else:
-                captureH[i][0]='E'
-
-    def createMOV(self, newmap):
-        map=self.currentmap
-        H=map.humans
-        V=map.vampires
-        W=map.werewolves
-        newH=newmap.humans
-        newV=newmap.vampires
-        newW=newmap.werewolves
-        for human in H:
-            if human in newH:
-                H.remove(human)
-                newH.remove(human)
-        for vampire in V:
-            if vampire in newV:
-                V.remove(vampire)
-                newV.remove(vampire)
-        for werewolve in W:
-            if werewolve in newW:
-                W.remove(werewolve)
-                newW.remove(werewolve)
-
-        for i in H:
-            mov=[]
-            for j in newH:
-                if max(abs(i[1][0]-j[1][0]),abs(i[1][1]-j[1][1]))<=1:
-                    mov.append(j)
-                if len(mov)==1:
-                    #voir MOV
-                    return 0
+            nb_vamp = nb_vamp + j[2]
+        return self.side * (nb_ww - nb_vamp)
 
     ####
     # ALEX AND PIERRE tests
     ####
 
-    def movegrpCond(self, i, camp):
-        maps=[]
-        H=self.currentmap.humans
-        map=self.currentmap
-        if camp==1:
-            playerPawns = map.werewolves[i]
+    def movegrpCond(self, i):
+        maps = []
+        H = self.currentmap.humans
+        map = self.currentmap
+        if self.side == 1:
+            player_pawns = map.werewolves[i]
         else:
-            playerPawns = map.vampires[i]
-
-        coordX = playerPawns[1][0]
-        coordY = playerPawns[1][1]
-        for j in range(1,playerPawns[0]+1):
+            player_pawns = map.vampires[i]
+        coordX = player_pawns[1][0]
+        coordY = player_pawns[1][1]
+        for j in range(1,player_pawns[0]+1):
             for k in [-1,0,1]:
                 for l in [-1,0,1]:
                     for h in H:
                         if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
-                            tempmap=deepcopy(map)
+                            tempmap = deepcopy(map)
                             #TODO: Rassembler les fonctions move_vampires/move_werewolves add_vampires/add_werewolves etc en une avec param
-                            if camp==1:
+                            if self.side == 1:
                                 tempmap.move_vampires(j, coordX + k, coordY + l, i)
                             else:
                                 tempmap.move_werewolves(j, coordX + k, coordY + l, i)
-                            if not self.arrayIsInList(tempmap,maps):
+                            if not list_in_list_of_lists(tempmap, maps):
                                 maps.append(tempmap)
-
         return maps
 
-
-    def createMapsfromMap(self,camp):
-        maps=[]
-        if camp==1:
+    def create_maps_from_map(self):
+        maps = []
+        if self.side == 1:
             for i in range(len(self.currentmap.werewolves)):
-                maps+=(self.movegrpCond(i,camp))
-        elif camp==0:
+                maps += (self.movegrpCond(i))
+        elif self.side == 0:
             for i in range(len(self.currentmap.vampires)):
-                maps+=(self.movegrpCond(i,camp))
+                maps += (self.movegrpCond(i))
         return maps
 
     ####
@@ -171,10 +73,10 @@ class Brain:
 
     # this function gives interesting boxes around one group
     def generateValueBoxes(self, i):
-        boxes=[] # this arrays stores interesting boxes around a group
-        H=self.currentmap.humans
-        map=self.currentmap
-        if self.side==1:
+        boxes = [] # this arrays stores interesting boxes around a group
+        H = self.currentmap.humans
+        map = self.currentmap
+        if self.side == 1:
             group = map.werewolves[i]
             E = map.vampires
         else:
@@ -192,18 +94,18 @@ class Brain:
                             # box is interesting if going there make a group closer to humans TODO: also to ennemies or allies
                             if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
                                 if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
-                                    if not self.arrayIsInList([coordX + k, coordY + l], boxes):
+                                    if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                         boxes += [[coordX + k, coordY + l]]
                             for e in E:
                                 if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                                     if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
-                                        if not self.arrayIsInList([coordX + k, coordY + l], boxes):
+                                        if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                             boxes += [[coordX + k, coordY + l]]
                     else:
                         for e in E:
                             if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                                 if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
-                                    if not self.arrayIsInList([coordX + k, coordY + l], boxes):
+                                    if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                         boxes += [[coordX + k, coordY + l]]
 
         return boxes
@@ -219,7 +121,7 @@ class Brain:
             possibleTuples += [possibleTuplesForOneBox]
 
         # this array contains the list of possibilities for each valueBoxes (0 on the first box, or 1 or 2 and so on..)
-        possibleTuples = Brain.standardizeArray(possibleTuples)
+        possibleTuples = list_of_lists_to_list(possibleTuples)
 
         # this array represents "possibleTuples" with index (integers) instead of tuples
         indexArray = Brain.generateIndexArray(len(valueBoxes), sizeOfOriginalGroup)
@@ -253,7 +155,7 @@ class Brain:
             else:
                 moveFiltered = valueMoves
 
-            # print len(Brain.deleteZeroMoves(moveFiltered))
+            # print len(deleteZeroMoves(moveFiltered))
             # #
             # print "-------------------"
             # print "heuristic 1"
@@ -268,12 +170,12 @@ class Brain:
                 heuristic1 =  self.heuristic1(move)
                 # if heuristic1[0] == 14:
                 #     print "-----------"
-                #     print Brain.deleteZeroMoves([move])
+                #     print deleteZeroMoves([move])
                 #     print self.heuristic1(move)
                 #     print "-----------"
 
                 # print "-----------"
-                # print Brain.deleteZeroMoves([move])
+                # print deleteZeroMoves([move])
                 # print self.heuristic1(move)
                 # print "-----------"
 
@@ -294,7 +196,7 @@ class Brain:
                         newMoves1 = [move]
             #
             print("results")
-            print(Brain.deleteZeroMoves(newMoves1))
+            print(delete_zero_moves(newMoves1))
             print(len(newMoves1))
             #
             # print "-------------------"
@@ -305,7 +207,7 @@ class Brain:
             newMoves2 = []
             scoreMax = 0
             for move in newMoves1:
-                # print Brain.deleteZeroMoves([move])
+                # print deleteZeroMoves([move])
                 # print self.heuristic2(move, boxes, group[1])
                 heuristic2 = self.heuristic2(move, boxes, group[1])
                 if scoreMax == 0:
@@ -319,10 +221,10 @@ class Brain:
                         newMoves2 = [move]
 
             # print "results"
-            # print Brain.deleteZeroMoves(newMoves2)
+            # print deleteZeroMoves(newMoves2)
             # print len(newMoves2)
 
-            newMoves2 = self.splitFilter(Brain.deleteZeroMoves(newMoves2))
+            newMoves2 = self.splitFilter(delete_zero_moves(newMoves2))
             # print "---------------------"
             # print newMoves2
 
@@ -331,7 +233,7 @@ class Brain:
             # print len(newMoves2)
             return newMoves2[i]
         else:
-            valueMoves = self.splitFilter(Brain.deleteZeroMoves(valueMoves))
+            valueMoves = self.splitFilter(delete_zero_moves(valueMoves))
             # Move is chosen randomly into the last sublist
             i = randint(0,len(valueMoves)-1)
             # print len(newMoves2)
@@ -391,7 +293,7 @@ class Brain:
                     if subgroup[0] < target[0]:
                         score += 0
                     else:
-                        if not self.arrayIsInList(target[1], [x[0][1] for x in goodTargets]) and subgroup[0] > 0:
+                        if not list_in_list_of_lists(target[1], [x[0][1] for x in goodTargets]) and subgroup[0] > 0:
                             distTarget = float(max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1]))) + 1
                             goodTargets += [[target, distTarget]]
                             score += target[0]
@@ -422,8 +324,8 @@ class Brain:
                     score += 0
                 elif subgroup[1] == boxWithTarget[0]:
                     peopleInTargets = []
-                    for target in Brain.sortHumanByNumber(boxWithTarget[1]):
-                        if not self.arrayIsInList(target[1], visitedTarget):
+                    for target in sort_human_by_number(boxWithTarget[1]):
+                        if not list_in_list_of_lists(target[1], visitedTarget):
                             if attack >= target[0]:
                                 attack -= target[0]
                                 visitedTarget += [target[1]]
@@ -433,22 +335,6 @@ class Brain:
 
         # print ('score final', score)
         return score
-
-    @staticmethod
-    def sortHumanByNumber(humans):
-        humanIndexes = []
-        result = []
-        for i in range(len(humans)):
-            humanIndexes.append([humans[i][0], i])
-
-
-        humanIndexes.sort(key=operator.itemgetter(0))
-        humanIndexes.reverse()
-
-        for humanIndex in humanIndexes:
-            result.append(humans[humanIndex[1]])
-
-        return result
 
     # This function takes a move defined by index and the corresponding array of tuples
     # and returns the sum of characters of that move
@@ -483,40 +369,30 @@ class Brain:
             result +=[]
         else:
             for i in list[0]:
-                result+=Brain.distribute(i,  Brain.generateMoves(list[1:]))
+                result += Brain.distribute(i, Brain.generateMoves(list[1:]))
         return result
 
     # This function is used to distribute a value on an array of arrays
     # ex : [1,[1,2],[3,4]] => [[1,1,2],[1,3,4]]
     @staticmethod
-    def distribute(element,lists):
-        newList = []
-        if lists==[]:
+    def distribute(element, lists):
+        new_list = []
+        if not lists:
             return [[element]]
-        elif  isinstance( lists[0], int )==True:
-            newList = [lists+[element]]
-            return newList
-        else :
+        elif isinstance(lists[0], int):
+            new_list = [lists+[element]]
+            return new_list
+        else:
             for list in lists:
-                list +=[element]
-                newList+=[list]
-            return newList
-
-    # This function transforms and array of array into a simple array
-    # ex: [[a,b],[c,d]] => [a,b,c,d]
-    @staticmethod
-    def standardizeArray(list):
-        resultList = []
-        for array in list:
-            for elem in array:
-                resultList += [elem]
-        return resultList
+                list += [element]
+                new_list += [list]
+            return new_list
 
     # This function finds the closest group of humans (and biggest if equality) from each box in boxes
     # the paramater previousCoord is used to keep consistancy in moves : if a group of human is closer than other groups
     # from a box but farer than the previous box, then the goal is not to got toward this group of human
     def findTargetHumans(self, boxes, previousCoord):
-        H=self.currentmap.humans
+        H = self.currentmap.humans
         boxWithTargetHumans = []
         for box in boxes:
             targetHumans = []
@@ -537,12 +413,6 @@ class Brain:
 
         return boxWithTargetHumans
 
-    def arrayIsInList(self, array, list):
-        for elem in list:
-            if np.array_equal(np.array(array), np.array(elem)):
-                return True
-        return False
-
     # This function create MOV that can be sent to server from an array of moves
     def createMOV(self, moves):
         movCmd = []
@@ -559,22 +429,10 @@ class Brain:
 
         return [movNb, movCmd]
 
-    @staticmethod
-    def deleteZeroMoves(moves):
-        nonZeroMoves = []
-        for move in moves:
-            nonZeroMove = []
-            for tuple in move:
-                if tuple[0] != 0:
-                    nonZeroMove += [tuple]
-            nonZeroMoves += [nonZeroMove]
-
-        return nonZeroMoves
-
     # Returns moves to the server
-    def returnMoves(self):
-        moves=[]
-        if self.side==1:
+    def return_moves(self):
+        moves = []
+        if self.side == 1:
             for i in range(len(self.currentmap.werewolves)):
                 boxes = self.generateValueBoxes(i)
                 valueMoves = self.generateValueMoves(boxes, self.currentmap.werewolves[i][0])
@@ -585,6 +443,4 @@ class Brain:
                 valueMoves = self.generateValueMoves(boxes, self.currentmap.vampires[i][0])
                 moves += [self.chooseMove(valueMoves, boxes, self.currentmap.vampires[i])]
 
-        # print Brain.deleteZeroMoves(moves)
-
-        return self.createMOV(Brain.deleteZeroMoves(moves))
+        return self.createMOV(delete_zero_moves(moves))

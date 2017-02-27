@@ -77,10 +77,10 @@ if __name__ == '__main__':
             # get updates
             numbers = number_of_changes(sock)
             changes = get_changes(sock, numbers)
-            if (len(changes) > 0):
+            if len(changes) > 0:
                 new_map.update_map(changes)
 
-            moves = brain.returnMoves()
+            moves = brain.return_moves()
             send_command(sock, "MOV", moves[0], moves[1])
 
             # Update brain with the new map
