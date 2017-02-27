@@ -293,9 +293,9 @@ class Brain:
                         scoreDistanceMax = heuristic1[1]
                         newMoves1 = [move]
             #
-            print "results"
-            print Brain.deleteZeroMoves(newMoves1)
-            print len(newMoves1)
+            print("results")
+            print(Brain.deleteZeroMoves(newMoves1))
+            print(len(newMoves1))
             #
             # print "-------------------"
             # print "heuristic 2"
