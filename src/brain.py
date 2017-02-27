@@ -9,12 +9,12 @@ class Brain:
 
     def __init__(self, currentmap, side):
         self.currentmap = currentmap
-        self.side = side  # 1=werewolf, -1=vampires
+        self.side = side
 
-    ####
-    # GENERAL FUNCTIONS OF BRAIN
-    ####
+    def is_werewolf(self):
+        return self.side == 1
 
+    # TODO Can we delete this unused method?
     def score(self):
         ww = self.currentmap.werewolf
         vamp = self.currentmap.vamp
@@ -26,6 +26,7 @@ class Brain:
             nb_vamp = nb_vamp + j[2]
         return self.side * (nb_ww - nb_vamp)
 
+    # TODO Can we delete these tests?
     ####
     # ALEX AND PIERRE tests
     ####
@@ -34,7 +35,7 @@ class Brain:
         maps = []
         H = self.currentmap.humans
         map = self.currentmap
-        if self.side == 1:
+        if Brain.is_werewolf(self):
             player_pawns = map.werewolves[i]
         else:
             player_pawns = map.vampires[i]
@@ -57,7 +58,7 @@ class Brain:
 
     def create_maps_from_map(self):
         maps = []
-        if self.side == 1:
+        if Brain.is_werewolf(self):
             for i in range(len(self.currentmap.werewolves)):
                 maps += (self.movegrpCond(i))
         elif self.side == 0:
@@ -71,11 +72,12 @@ class Brain:
 
     def generate_value_boxes(self, given_group):
         """this function gives interesting boxes around one group"""
-        boxes = [] # this arrays stores interesting boxes around a group
+        boxes = []  # this arrays stores interesting boxes around a group
         H = self.currentmap.humans
         given_map = self.currentmap
         max_x, max_y = given_map.size_x, given_map.size_y
-        if self.side == 1:
+
+        if Brain.is_werewolf(self):
             group, enemies = given_map.werewolves[given_group], given_map.vampires
         else:
             group, enemies = given_map.vampires[given_group], given_map.werewolves
@@ -166,7 +168,7 @@ class Brain:
 
     def enemy_filter(self, move):
         """This filter chooses moves that allow to kill directly a group of enemies"""
-        if self.side == 1:
+        if Brain.is_werewolf(self):
             enemies = self.currentmap.vampires
         else:
             enemies = self.currentmap.werewolves
@@ -183,7 +185,7 @@ class Brain:
         score, good_targets = 0, []
         targets = self.currentmap.humans
         for subgroup in move:
-            if self.side == 1:
+            if Brain.is_werewolf(self):
                 enemies = self.currentmap.vampires
             else:
                 enemies = self.currentmap.werewolves
@@ -270,7 +272,7 @@ class Brain:
     def createMOV(self, moves):
         movCmd = []
         movNb = 0
-        if self.side==1:
+        if Brain.is_werewolf(self):
             groups = self.currentmap.werewolves
         else:
             groups = self.currentmap.vampires
@@ -285,7 +287,7 @@ class Brain:
     # Returns moves to the server
     def return_moves(self):
         moves = []
-        if self.side == 1:
+        if Brain.is_werewolf(self):
             for i in range(len(self.currentmap.werewolves)):
                 boxes = self.generate_value_boxes(i)
                 value_moves = generate_value_moves(boxes, self.currentmap.werewolves[i][0])
@@ -295,5 +297,4 @@ class Brain:
                 boxes = self.generate_value_boxes(i)
                 value_moves = generate_value_moves(boxes, self.currentmap.vampires[i][0])
                 moves += [self.choose_move(value_moves, boxes, self.currentmap.vampires[i])]
-
         return self.createMOV(delete_zero_moves(moves))
