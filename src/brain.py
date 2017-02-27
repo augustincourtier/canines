@@ -77,12 +77,9 @@ class Brain:
         H = self.currentmap.humans
         map = self.currentmap
         if self.side == 1:
-            group = map.werewolves[i]
-            E = map.vampires
+            group, enemies = map.werewolves[i], map.vampires
         else:
-            group = map.vampires[i]
-            E = map.werewolves
-
+            group, enemies = map.vampires[i], map.werewolves
         coordX = group[1][0]
         coordY = group[1][1]
 
@@ -96,13 +93,13 @@ class Brain:
                                 if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                         boxes += [[coordX + k, coordY + l]]
-                            for e in E:
+                            for e in enemies:
                                 if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                                     if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
                                         if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                             boxes += [[coordX + k, coordY + l]]
                     else:
-                        for e in E:
+                        for e in enemies:
                             if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                                 if coordX + k <= map.size_x-1 and coordX + k >= 0 and coordY + l <= map.size_y-1 and coordY + l >= 0:
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
