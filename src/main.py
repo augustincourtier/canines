@@ -80,11 +80,12 @@ if __name__ == '__main__':
             if len(changes) > 0:
                 new_map.update_map(changes)
 
-            moves = brain.return_moves()
-            send_command(sock, "MOV", moves[0], moves[1])
-
+            # TODO I moved this up, check when we need to update it
             # Update brain with the new map
             brain = Brain(new_map, team[1])
+
+            moves = brain.return_moves()
+            send_command(sock, "MOV", moves[0], moves[1])
 
             time.sleep(1)
         else:
