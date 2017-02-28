@@ -82,3 +82,10 @@ def split_filter(moves):
             elif len(move) < min_split:
                 filtered_moves = [move]
     return filtered_moves
+
+
+def check_move_permission(initial, intended):
+    """Checks if a move is allowed: enough people in the box to move them?"""
+    if intended > initial:
+        return False
+    return True

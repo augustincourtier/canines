@@ -276,11 +276,14 @@ class Brain:
             groups = self.currentmap.werewolves
         else:
             groups = self.currentmap.vampires
-
+        # TODO remove print statements when error solved
+        # print("Initial groups: ", groups)
+        # print("Moves: ", moves)
         for i in range(len(groups)):
             for el in moves[i]:
-                movCmd += [groups[i][1][0], groups[i][1][1], el[0], el[1][0], el[1][1]]
-                movNb += 1
+                if check_move_permission(groups[i][0], el[0]):
+                    movCmd += [groups[i][1][0], groups[i][1][1], el[0], el[1][0], el[1][1]]
+                    movNb += 1
 
         return [movNb, movCmd]
 
