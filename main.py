@@ -3,10 +3,11 @@
 import socket
 import struct
 import array
-from map import Map
-from brain import Brain
+from src.map import Map
+from src.brain import Brain
 import time
-from server_commands import *
+from src.server_commands import *
+from scoring_folder.scoring import Score
 
 
 if __name__ == '__main__':
@@ -80,12 +81,14 @@ if __name__ == '__main__':
             if len(changes) > 0:
                 new_map.update_map(changes)
 
+            # TODO Improve scoring
+            print("Nouvelle map, nouveau score : ", Score.scoring(Score(new_map, team[1])))
+
             # TODO I moved this up, check when we need to update it
             # Update brain with the new map
             brain = Brain(new_map, team[1])
 
             moves = brain.return_moves()
-
             send_command(sock, "MOV", moves[0], moves[1])
 
             time.sleep(1)
