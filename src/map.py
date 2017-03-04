@@ -104,5 +104,5 @@ class Map:
         print(self.vampires)
         print(self.werewolves)
 
-    def convertIntoArray(self):
+    def convert_into_array(self):
         return [self.vampires, self.werewolves, self.humans, self.size_x, self.size_y]
