@@ -1,4 +1,4 @@
-import map
+import src.map
 import numpy as np
 from copy import deepcopy
 from random import randint

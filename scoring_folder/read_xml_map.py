@@ -15,17 +15,17 @@ def xml_data():
             if clean_map:
                 clean_maps.append(clean_map)
             clean_map = {}
-            clean_map['Columns'] = map.attrib['Columns']
-            clean_map['Rows'] = map.attrib['Rows']
+            clean_map['Columns'] = int(map.attrib['Columns'])
+            clean_map['Rows'] = int(map.attrib['Rows'])
             clean_map['Humans'], clean_map['Werewolves'], clean_map['Vampires'] = [], [], []
         elif map.tag == "Humans":
-            humans = [map.attrib['X'], map.attrib['Y'], map.attrib['Count'], 0, 0]
+            humans = [int(map.attrib['X']), int(map.attrib['Y']), int(map.attrib['Count']), 0, 0]
             clean_map['Humans'].append(humans)
         elif map.tag == "Werewolves":
-            werewolves = [map.attrib['X'], map.attrib['Y'], 0, 0, map.attrib['Count']]
+            werewolves = [int(map.attrib['X']), int(map.attrib['Y']), 0, 0, int(map.attrib['Count'])]
             clean_map['Werewolves'].append(werewolves)
         elif map.tag == "Vampires":
-            vampires = [map.attrib['X'], map.attrib['Y'], 0, map.attrib['Count'], 0]
+            vampires = [int(map.attrib['X']), int(map.attrib['Y']), 0, int(map.attrib['Count']), 0]
             clean_map['Vampires'].append(vampires)
     clean_maps.append(clean_map)
     return clean_maps
