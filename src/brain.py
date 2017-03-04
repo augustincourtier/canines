@@ -2,7 +2,7 @@ import map
 import numpy as np
 from copy import deepcopy
 from random import randint
-from src.prepare_moves import *
+from prepare_moves import *
 
 
 class Brain:
@@ -26,45 +26,6 @@ class Brain:
             nb_vamp = nb_vamp + j[2]
         return self.side * (nb_ww - nb_vamp)
 
-    # TODO Can we delete these tests?
-    ####
-    # ALEX AND PIERRE tests
-    ####
-
-    def movegrpCond(self, i):
-        maps = []
-        H = self.currentmap.humans
-        map = self.currentmap
-        if Brain.is_werewolf(self):
-            player_pawns = map.werewolves[i]
-        else:
-            player_pawns = map.vampires[i]
-        coordX = player_pawns[1][0]
-        coordY = player_pawns[1][1]
-        for j in range(1,player_pawns[0]+1):
-            for k in [-1,0,1]:
-                for l in [-1,0,1]:
-                    for h in H:
-                        if max(abs(coordX - h[1][0]),abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
-                            tempmap = deepcopy(map)
-                            #TODO: Rassembler les fonctions move_vampires/move_werewolves add_vampires/add_werewolves etc en une avec param
-                            if self.side == 1:
-                                tempmap.move_vampires(j, coordX + k, coordY + l, i)
-                            else:
-                                tempmap.move_werewolves(j, coordX + k, coordY + l, i)
-                            if not list_in_list_of_lists(tempmap, maps):
-                                maps.append(tempmap)
-        return maps
-
-    def create_maps_from_map(self):
-        maps = []
-        if Brain.is_werewolf(self):
-            for i in range(len(self.currentmap.werewolves)):
-                maps += (self.movegrpCond(i))
-        elif self.side == 0:
-            for i in range(len(self.currentmap.vampires)):
-                maps += (self.movegrpCond(i))
-        return maps
 
     ####
     # ALEX AND ELIE tests
@@ -73,14 +34,19 @@ class Brain:
     def generate_value_boxes(self, given_group):
         """this function gives interesting boxes around one group"""
         boxes = []  # this arrays stores interesting boxes around a group
+        friend_coords = []
         H = self.currentmap.humans
         given_map = self.currentmap
         max_x, max_y = given_map.size_x, given_map.size_y
 
         if Brain.is_werewolf(self):
             group, enemies = given_map.werewolves[given_group], given_map.vampires
+            for werewolf in given_map.werewolves:
+                friend_coords.append(werewolf[1])
         else:
             group, enemies = given_map.vampires[given_group], given_map.werewolves
+            for vampire in given_map.vampires:
+                friend_coords.append(vampire[1])
         coordX, coordY = group[1][0], group[1][1]
 
         for j in range(1, group[0]+1):
@@ -92,18 +58,21 @@ class Brain:
                             if max(abs(coordX - h[1][0]), abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
                                 if (0 <= coordX + k <= max_x-1) and (0 <= coordY + l <= max_y-1):
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
-                                        boxes += [[coordX + k, coordY + l]]
+                                        if not list_in_list_of_lists([coordX + k, coordY + l], friend_coords):
+                                            boxes += [[coordX + k, coordY + l]]
                             for e in enemies:
                                 if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                                     if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                                         if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
-                                            boxes += [[coordX + k, coordY + l]]
+                                            if not list_in_list_of_lists([coordX + k, coordY + l], friend_coords):
+                                                boxes += [[coordX + k, coordY + l]]
                     else:
                         for e in enemies:
                             if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                                 if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                         boxes += [[coordX + k, coordY + l]]
+        print(boxes)
         return boxes
 
     def choose_move(self, value_moves, boxes, group):
@@ -158,13 +127,13 @@ class Brain:
                         score_max = heuristic2
                         new_moves2 = [move]
             new_moves2 = split_filter(delete_zero_moves(new_moves2))
-
             i = randint(0, len(new_moves2)-1)  # Move is chosen randomly into the last sublist
             return new_moves2[i]
         else:
             value_moves = split_filter(delete_zero_moves(value_moves))
             i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
             return value_moves[i]
+
 
     def enemy_filter(self, move):
         """This filter chooses moves that allow to kill directly a group of enemies"""

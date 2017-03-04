@@ -1,4 +1,4 @@
-from src.utils import *
+from utils import *
 
 
 def sum_of_move(index_move, tuples):

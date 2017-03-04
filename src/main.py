@@ -6,7 +6,7 @@ import array
 from map import Map
 from brain import Brain
 import time
-from src.server_commands import *
+from server_commands import *
 
 
 if __name__ == '__main__':
@@ -85,6 +85,7 @@ if __name__ == '__main__':
             brain = Brain(new_map, team[1])
 
             moves = brain.return_moves()
+
             send_command(sock, "MOV", moves[0], moves[1])
 
             time.sleep(1)
