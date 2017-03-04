@@ -81,7 +81,6 @@ if __name__ == '__main__':
             if len(changes) > 0:
                 new_map.update_map(changes)
 
-            # TODO Improve scoring
             print("Nouvelle map, nouveau score : ", Score.scoring(Score(new_map, team[1])))
 
             # TODO I moved this up, check when we need to update it
