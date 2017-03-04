@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
 import xml.etree.ElementTree as ET
+from scoring_folder.scoring import Score
 from src.map import Map
-from src.scoring import Score
 
 
 def xml_data():
-    tree = ET.ElementTree(file='testmap2.xml')
+    tree = ET.ElementTree(file='../scoring_folder/testmap2.xml')
     maps = tree.getroot()
     clean_maps = []
     clean_map = {}
