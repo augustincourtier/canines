@@ -6,7 +6,7 @@ import array
 from map import Map
 from brain import Brain
 import time
-from src.server_commands import *
+from server_commands import *
 
 
 if __name__ == '__main__':
@@ -71,6 +71,7 @@ if __name__ == '__main__':
             raise ValueError("Erreur protocole: mauvaise commande reçue.")
 
         elif commande5 == "END":
+            print("Fin de la partie !")
             break
 
         elif commande5 == "UPD":

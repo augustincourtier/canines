@@ -50,7 +50,6 @@ class Map:
             if case_data[4] != 0:
                 self.add_werewolves(number=case_data[4], coord_x=case_data[0], coord_y=case_data[1])
 
-
     def add_vampires(self, number, coord_x, coord_y):
         self.vampires.append([number, [coord_x, coord_y]])
 
@@ -101,7 +100,7 @@ class Map:
                 return [i, 0]
 
     def displayMap(self):
-        print (self.humans)
+        print(self.humans)
         print(self.vampires)
         print(self.werewolves)
 

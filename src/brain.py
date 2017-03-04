@@ -1,8 +1,10 @@
-import map
+# -*- coding: utf-8 -*-
+
 import numpy as np
 from copy import deepcopy
 from random import randint
-from src.prepare_moves import *
+from prepare_moves import *
+from map_generator import MapGenerator
 
 
 class Brain:
@@ -88,7 +90,8 @@ class Brain:
                 for l in [-1, 0, 1]:
                     if len(H) > 0:
                         for h in H:
-                            # box is interesting if going there make a group closer to humans TODO: also to ennemies or allies
+                            # box is interesting if going there make a group closer to humans
+                            # TODO: also to ennemies or allies
                             if max(abs(coordX - h[1][0]), abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
                                 if (0 <= coordX + k <= max_x-1) and (0 <= coordY + l <= max_y-1):
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
@@ -104,18 +107,23 @@ class Brain:
                                 if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
                                         boxes += [[coordX + k, coordY + l]]
+
+        # Storing boxes in array (list of lists) containing : [[newX, newY], ...]
         return boxes
 
     def choose_move(self, value_moves, boxes, group):
-
+        """Generating moves according to adjacent enemies (if any) or humans on the map."""
         if len(self.currentmap.humans) > 0:  # If there are still humans on the map
 
-            # Filters move to keep first those which allow to kill an adjacent group of enemy
+            # Filters moves to first keep those which allow to kill an adjacent group of enemy (if any)
             value_moves_filtered = []
             for move in value_moves:
                 filtered_move = self.enemy_filter(move)
                 if len(filtered_move) > 0:
                     value_moves_filtered.append(filtered_move)
+
+            # Storing moves in move_filtered
+            # Will only attack if adjacent enemies !
             if len(value_moves_filtered) > 0:
                 move_filtered = value_moves_filtered
             else:
@@ -126,18 +134,23 @@ class Brain:
             score_max = 0
             score_distance_max = 0
             for move in move_filtered:
+                # Evaluating each move according to numbers of humans and their distance compared to the enemy
                 heuristic1 = self.heuristic1(move)
                 if score_max == 0:
                     score_max = heuristic1[0]
                     score_distance_max = heuristic1[1]
                     new_moves1 = [move]
                 else:
+                    # if move has the same score than maximal score, testing distance
                     if score_max == heuristic1[0]:
+                        # if move has same score and distance, adding it
                         if score_distance_max == heuristic1[1]:
                             new_moves1.append(move)
+                        # if move has same score and more distance_score, replacing all previous moves by this one
                         elif score_distance_max < heuristic1[1]:
                             score_distance_max = heuristic1[1]
                             new_moves1 = [move]
+                    # if move has higher score than maximal score, replacing all previous moves by this one
                     elif score_max < heuristic1[0]:
                         score_max = heuristic1[0]
                         score_distance_max = heuristic1[1]
@@ -147,6 +160,7 @@ class Brain:
             new_moves2 = []
             score_max = 0
             for move in new_moves1:
+                # Evaluating each filtered move according to numbers of humans / distance to reach them
                 heuristic2 = self.heuristic2(move, boxes, group[1])
                 if score_max == 0:
                     score_max = heuristic2
@@ -157,14 +171,18 @@ class Brain:
                     elif score_max < heuristic2:
                         score_max = heuristic2
                         new_moves2 = [move]
-            new_moves2 = split_filter(delete_zero_moves(new_moves2))
 
-            i = randint(0, len(new_moves2)-1)  # Move is chosen randomly into the last sublist
-            return new_moves2[i]
+            # List of all possible moves according to the 2 filters
+            new_moves2 = split_filter(delete_zero_moves(new_moves2))
+            # i = randint(0, len(new_moves2)-1)  # Move is chosen randomly into the last sublist
+
+            return new_moves2
+
+        # TODO: if no more humans : gather group and KILL THEM ALL (or run if they are more)
         else:
             value_moves = split_filter(delete_zero_moves(value_moves))
-            i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
-            return value_moves[i]
+            # i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
+            return value_moves
 
     def enemy_filter(self, move):
         """This filter chooses moves that allow to kill directly a group of enemies"""
@@ -180,7 +198,7 @@ class Brain:
         return []
 
     def heuristic1(self, move):
-        """This heuristic evulates what groups of human can the group reach before the ennemy and which of these
+        """This heuristic evaluates what groups of humans the group can reach before the enemy and which of these
         groups can be beaten with the amount of allies"""
         score, good_targets = 0, []
         targets = self.currentmap.humans
@@ -191,26 +209,34 @@ class Brain:
                 enemies = self.currentmap.werewolves
             for target in targets:
                 dist_target_enemy = []
+
+                # Getting minimal distance between all enemies and the group of humans
                 for enemy in enemies:
                     dist_target_enemy += [max(abs(target[1][0]-enemy[1][0]), abs(target[1][1]-enemy[1][1]))]
                 dist_min_enemy = min(dist_target_enemy)
+
+                # Comparing this distance to our group position
+                # If inferior, not interesting
                 if dist_min_enemy <= max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1])):
                     score += 0
                 else:
+                    # If less numerous, not interesting
                     if subgroup[0] < target[0]:
                         score += 0
                     else:
+                        # Else, score = number of humans
+                        # Adding the target if not already in good_targets
                         if not list_in_list_of_lists(target[1], [x[0][1] for x in good_targets]) and subgroup[0] > 0:
                             dist_target = float(max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1]))) + 1
                             good_targets += [[target, dist_target]]
                             score += target[0]
                         else:
+                            # Updating the target score if greater if already in group_targets
                             for targetWithDistance in good_targets:
                                 if targetWithDistance[0] == target:
                                     dist_target = float(max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1]))) + 1
                                     if dist_target < targetWithDistance[1]:
                                         targetWithDistance[1] = dist_target
-
         # Taking distances into account
         distance_score = 0
         for targetWithDistance in good_targets:
@@ -268,6 +294,20 @@ class Brain:
 
         return box_with_target_humans
 
+    def find_enemies(self):
+        """This function returns the coords of enemies groups with the form of a list of lists : [number, [x, y]]"""
+        if Brain.is_werewolf(self):
+            return self.currentmap.vampires
+        else:
+            return self.currentmap.werewolves
+
+    def find_our_teams(self):
+        """This function returns the coords of enemies groups with the form of a list of lists : [number, [x, y]]"""
+        if Brain.is_werewolf(self):
+            return self.currentmap.werewolves
+        else:
+            return self.currentmap.vampires
+
     # This function create MOV that can be sent to server from an array of moves
     def createMOV(self, moves):
         movCmd = []
@@ -287,17 +327,40 @@ class Brain:
 
         return [movNb, movCmd]
 
-    # Returns moves to the server
     def return_moves(self):
-        moves = []
+        """Returns moves to the server"""
+        possible_moves = []
+        map_generator = MapGenerator(enemies_coords=self.find_enemies())
+        print(Brain.is_werewolf(self))
         if Brain.is_werewolf(self):
             for i in range(len(self.currentmap.werewolves)):
+                # Boxes that make closer to humans
                 boxes = self.generate_value_boxes(i)
+                # All possibities of split in those boxes
                 value_moves = generate_value_moves(boxes, self.currentmap.werewolves[i][0])
-                moves += [self.choose_move(value_moves, boxes, self.currentmap.werewolves[i])]
+
+                # Calculating most interesting split possibilities for this group
+                group_possible_moves = self.choose_move(value_moves, boxes, self.currentmap.werewolves[i])
+
+                # Generating possibility maps
+                map_generator.update_maps(subgroup_possible_moves=group_possible_moves)
+
+                # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
+                #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
+                possible_moves += [(i, group_possible_moves, )]
         else:
             for i in range(len(self.currentmap.vampires)):
                 boxes = self.generate_value_boxes(i)
                 value_moves = generate_value_moves(boxes, self.currentmap.vampires[i][0])
-                moves += [self.choose_move(value_moves, boxes, self.currentmap.vampires[i])]
-        return self.createMOV(delete_zero_moves(moves))
+
+                # Calculating most interesting split possibilities for this group
+                group_possible_moves = self.choose_move(value_moves, boxes, self.currentmap.vampires[i])
+
+                # Generating possibility maps
+                map_generator.update_maps(subgroup_possible_moves=group_possible_moves)
+
+                # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
+                #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
+                possible_moves += [(i, group_possible_moves,)]
+                
+        return self.createMOV(delete_zero_moves(possible_moves))
