@@ -1,23 +1,33 @@
 from brain import Brain
 import numpy as np
 import map
+import time
 
-vampire=[[6, [1, 7]]]
-werewolf=[[5, [7, 3]],[5, [7, 2]]]
-humans=[[5, [7, 1]]]
+a = time.time()
+vampire=[[16, [8, 3]]]
+werewolf=[[16, [10, 9]]]
+humans=[[17, [2, 9]], [17, [9, 2]] , [3, [2, 3]], [3, [9, 3]], [15, [0, 1]],[15, [11, 10]], [11, [1, 10]],[11, [10, 1]], [19, [5, 1]],[19, [6, 10]]]
+# humans = []
+# humans=[[15, [0, 1]],[15, [11, 10]], [11, [1, 10]],[11, [10, 1]], [19, [5, 1]],[19, [6, 10]]]
 
-# vampire=[[4, [9, 0]], [4, [9, 4]]]
-# werewolf=[[8, [6, 0]]]
-# humans=[[1, [9, 2]]]
 
-mapTest=map.Map(vampire,werewolf,humans,10,10)
+# vampire=[[9, [9, 2]]]
+# werewolf=[[8, [2, 8]]]
+
+# humans = [[2, [9, 0]],[1,[9,2]],[2,[9,4]],[4,[2,2]]]
+
+mapTest=map.Map(vampire,werewolf,humans,15,15)
 
 # print mapTest
 
-brain=Brain(mapTest,1)
+brain=Brain(mapTest,-1)
 maps=brain.return_moves()
 
 print(maps)
+
+b = time.time()
+
+print(b-a)
 
 # for i in maps:
 #     print ("new map")

@@ -1,5 +1,6 @@
 from utils import *
-
+import itertools
+import time
 
 def sum_of_move(index_move, tuples):
     """This function takes a move defined by an index and the corresponding array of tuples
@@ -9,7 +10,6 @@ def sum_of_move(index_move, tuples):
         total += tuples[index][0]  # the first elem of a tuple [n, [x,y]] is the number of character
     return total
 
-
 def generate_index_array(box_number, group_size):
     """This function generates an array containing box_number arrays of group_size elements
     each element is and index in range 0 -- box_number*group_size -1"""
@@ -17,54 +17,80 @@ def generate_index_array(box_number, group_size):
     result = []
     for i in range(0, box_number):
         subarray = []
-        for j in range(0, group_size + 1):
+        for j in range(0, group_size):
             subarray += [index]
             index += 1
         result += [subarray]
     return result
 
-
-def generate_moves(l):
-    """This function is used to generate an array containing all possibilities of one pick in n arrays
-    of m integer elements. (on possibility is equivalent to a move)
-    ex : [[1,2],[3,4]] => [[1,3],[1,4],[2,3],[2,4]]"""
-    result = []
-    if not l:
-        result += []
-    else:
-        for i in l[0]:
-            result += distribute(i, generate_moves(l[1:]))
-    return result
-
-
-def generate_value_moves(value_boxes, size_of_original_group):
-    """this function generates all possibles subgroups from one original group,
-    and then choose valid possibilities (n subgroups with a total of people =  sizeOfOriginalGroup)"""
+def generate_value_moves(value_boxes_and_weight, size_of_original_group, human_group_list,enemy_group_list):
+    """this function generates all value subgroups from one original group,
+    and then choose valid possibilities (n subgroups with a total of people =  size_of_original_group)"""
+    initial_time = time.time()
     possible_tuples = []  # store each possible tuples for one valid box (ex 1 guy on the box, 2 guys etc..)
-    for i in range(len(value_boxes)):
-        possible_tuples_for_one_box = []
-        for j in range(0, size_of_original_group + 1):
-            possible_tuples_for_one_box += [[j, [value_boxes[i][0], value_boxes[i][1]]]]
-        possible_tuples += [possible_tuples_for_one_box]
+    group_weight = [] # store weight of each human group
+    
+    for box_and_weight in value_boxes_and_weight:
+        possible_tuples_per_box = []
+        for weight in box_and_weight[1]:
+            possible_tuples_per_box.append([weight]+[box_and_weight[0]])
+        possible_tuples.append(possible_tuples_per_box)
 
-    # this array contains the list of possibilities for each valueBoxes (0 on the first box, or 1 or 2 and so on..)
-    possible_tuples = list_of_lists_to_list(possible_tuples)
-    # this array represents "possible_tuples" with index (integers) instead of tuples
-    index_array = generate_index_array(len(value_boxes), size_of_original_group)
-    # this array still contains indexes
-    possible_moves = generate_moves(index_array)
+    good_moves = []
 
-    value_moves = []
-    for indexMove in possible_moves:
-        # eliminating with sumOfMove() combinations that don't give exactly sizeOfOriginalGroup characters in total
-        if sum_of_move(indexMove, possible_tuples) == size_of_original_group:
-            real_move = []
-            # converting indexes into tuples [n, [x,y]]
-            for index in indexMove:
-                real_move += [possible_tuples[index]]
-            value_moves += [real_move]
+    for possible_move in list(itertools.product(*possible_tuples)) :
+        sum_weight = 0
+        indexs = []
 
-    return value_moves
+        for submove_id in range(len(possible_move)) :
+            if possible_move[submove_id][0] != 0:
+                sum_weight += possible_move[submove_id][0]
+                indexs.append(possible_move[submove_id])
+
+        if sum_weight == size_of_original_group:
+            good_moves.append(delete_zero_moves([possible_move])[0])
+
+        elif sum_weight < size_of_original_group:
+            weight_to_share = size_of_original_group - sum_weight
+            tuples_per_value_box = []
+
+            if len(indexs) == 1 :
+                good_moves.append([[size_of_original_group,indexs[0][1]]])
+
+            else :
+                for index in indexs :
+                    tuple_per_value_box =[]
+                    for l in range(0 , weight_to_share+1):
+                        tuple_per_value_box.append([index[0]+l,index[1]])
+                    tuples_per_value_box.append(tuple_per_value_box)
+
+                for possible_move in list(itertools.product(*tuples_per_value_box)):
+                    sum_weight = 0
+                    indexs = []
+                    for submove_id in range(len(possible_move)) :
+                        if possible_move[submove_id][0] != 0:
+                            sum_weight += possible_move[submove_id][0]
+                            indexs.append(submove_id)
+                    if sum_weight == size_of_original_group:
+                        good_moves.append(possible_move)
+    
+    unique_good_moves = []
+
+    for good_move in good_moves:
+        is_unique = False
+        for unique_good_move in unique_good_moves:
+            if good_move ==unique_good_move:
+                is_unique = True
+        if is_unique == False :
+            unique_good_moves.append(good_move)
+
+    print('g :',time.time() - initial_time)
+
+    for move in unique_good_moves:
+        print(move)
+        print('-------')
+    print('len :',len(unique_good_moves))
+    return unique_good_moves
 
 
 # TODO Does the function do what it says?
@@ -89,3 +115,7 @@ def check_move_permission(initial, intended):
     if intended > initial:
         return False
     return True
+
+
+
+

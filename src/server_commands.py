@@ -2,7 +2,7 @@
 import struct
 import array
 
-SERVER_ADDRESS = "192.168.0.19"
+SERVER_ADDRESS = "138.195.105.47"
 SERVER_PORT = 5555
 
 

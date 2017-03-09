@@ -60,18 +60,3 @@ def sort_human_by_number(humans):
     return result
 
 
-# TODO Does the function do what it says?
-def distribute(element, lists):
-    """This function is used to distribute a value on an array of arrays
-    ex : [1,[1,2],[3,4]] => [[1,1,2],[1,3,4]]"""
-    new_list = []
-    if not lists:
-        return [[element]]
-    elif isinstance(lists[0], int):
-        new_list = [lists + [element]]
-        return new_list
-    else:
-        for list in lists:
-            list += [element]
-            new_list += [list]
-        return new_list

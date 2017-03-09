@@ -3,7 +3,7 @@ import numpy as np
 from copy import deepcopy
 from random import randint
 from prepare_moves import *
-
+from more_itertools import unique_everseen
 
 class Brain:
 
@@ -71,8 +71,8 @@ class Brain:
                             if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                                 if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                                     if not list_in_list_of_lists([coordX + k, coordY + l], boxes):
-                                        boxes += [[coordX + k, coordY + l]]
-        print(boxes)
+                                        if not list_in_list_of_lists([coordX + k, coordY + l], friend_coords):
+                                            boxes += [[coordX + k, coordY + l]]
         return boxes
 
     def choose_move(self, value_moves, boxes, group):
@@ -81,6 +81,7 @@ class Brain:
 
             # Filters move to keep first those which allow to kill an adjacent group of enemy
             value_moves_filtered = []
+            print('move 0 :', len(value_moves))
             for move in value_moves:
                 filtered_move = self.enemy_filter(move)
                 if len(filtered_move) > 0:
@@ -111,7 +112,7 @@ class Brain:
                         score_max = heuristic1[0]
                         score_distance_max = heuristic1[1]
                         new_moves1 = [move]
-
+            print('new move 1 :' ,len(new_moves1))
             # second heuristic
             new_moves2 = []
             score_max = 0
@@ -128,10 +129,16 @@ class Brain:
                         new_moves2 = [move]
             new_moves2 = split_filter(delete_zero_moves(new_moves2))
             i = randint(0, len(new_moves2)-1)  # Move is chosen randomly into the last sublist
+            # print(len(new_moves2))
+            print('new move 2 :' ,len(new_moves2))
+            print(new_moves2[i])
             return new_moves2[i]
         else:
             value_moves = split_filter(delete_zero_moves(value_moves))
             i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
+            # print(len(value_moves))
+            # print('new move 2 :' ,len(new_moves2))
+            print(value_moves[i])
             return value_moves[i]
 
 
@@ -261,12 +268,63 @@ class Brain:
         moves = []
         if Brain.is_werewolf(self):
             for i in range(len(self.currentmap.werewolves)):
+                print(self.currentmap.werewolves[i])
                 boxes = self.generate_value_boxes(i)
-                value_moves = generate_value_moves(boxes, self.currentmap.werewolves[i][0])
+                box_and_weight = self.generate_value_boxes_and_weight(i)
+                value_moves = generate_value_moves(box_and_weight, self.currentmap.werewolves[i][0], self.currentmap.humans, self.currentmap.vampires)
                 moves += [self.choose_move(value_moves, boxes, self.currentmap.werewolves[i])]
         else:
             for i in range(len(self.currentmap.vampires)):
+                print(self.currentmap.vampires[i])
                 boxes = self.generate_value_boxes(i)
-                value_moves = generate_value_moves(boxes, self.currentmap.vampires[i][0])
+                box_and_weight = self.generate_value_boxes_and_weight(i)
+                value_moves = generate_value_moves(box_and_weight, self.currentmap.vampires[i][0], self.currentmap.humans, self.currentmap.werewolves)
                 moves += [self.choose_move(value_moves, boxes, self.currentmap.vampires[i])]
         return self.createMOV(delete_zero_moves(moves))
+
+    def generate_value_boxes_and_weight(self, given_group):
+        """this function gives interesting boxes around one group and the weight of the humans / enemies targeted on this boxes"""
+        value_boxes_and_weight = [] # this arrays stores the weights 
+        friend_coords = [] # this arrays stores the coords of the allies  
+
+        H = self.currentmap.humans
+        given_map = self.currentmap
+        max_x, max_y = given_map.size_x, given_map.size_y
+
+        #looking for the size information
+        if Brain.is_werewolf(self):
+            group, enemies = given_map.werewolves[given_group], given_map.vampires
+            for werewolf in given_map.werewolves:
+                friend_coords.append(werewolf[1])
+        else:
+            group, enemies = given_map.vampires[given_group], given_map.werewolves
+            for vampire in given_map.vampires:
+                friend_coords.append(vampire[1])
+
+        coordX, coordY = group[1][0], group[1][1]
+
+        for k in [-1, 0, 1]:
+            for l in [-1, 0, 1]:
+                is_value_box = False # Coodr tested is a value box
+                weight_for_this_coord = []
+                if len(H) > 0:
+                    for h in H:
+                        # box is interesting if going there make a group closer to humans
+                        if max(abs(coordX - h[1][0]), abs(coordY - h[1][1])) > max(abs(coordX + k - h[1][0]), abs(coordY + l - h[1][1])):
+                            if (0 <= coordX + k <= max_x-1) and (0 <= coordY + l <= max_y-1):
+                                if not list_in_list_of_lists([coordX + k, coordY + l], friend_coords):
+                                    is_value_box = True
+                                    if not h[0] in weight_for_this_coord:
+                                        weight_for_this_coord += [h[0]]
+                # box is interesting if going there make a group closer to enemies TODO : allies
+                for e in enemies:
+                    if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
+                        if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
+                            if not list_in_list_of_lists([coordX + k, coordY + l], friend_coords):
+                                is_value_box = True
+                                if not e[0] in weight_for_this_coord:
+                                    weight_for_this_coord += [e[0]]
+                if is_value_box == True:
+                    value_boxes_and_weight.append([[coordX + k,coordY + l ]] +[weight_for_this_coord+[0]]) # Create a list of weights and value boxes
+        print(value_boxes_and_weight)
+        return value_boxes_and_weight
