@@ -69,7 +69,7 @@ class Brain:
                                         weight_for_this_coord += [e[0]]
                 if is_value_box == True:
                     value_boxes_and_weight.append([[coordX + k,coordY + l ]] +[weight_for_this_coord+[0]+[group[0]]]) # Create a list of weights and value boxes
-        print(value_boxes_and_weight)
+        # print(value_boxes_and_weight)
         return value_boxes_and_weight
 
     def join_allies(self, given_group):
@@ -202,7 +202,7 @@ class Brain:
                         heuristic_move = [move]
             heuristic_move = split_filter(delete_zero_moves(heuristic_move))
 
-            if (len(heuristic_move) == 0):
+            if len(heuristic_move) == 0:
                 heuristic_move = self.join_allies(group)
 
             # i = randint(0, len(heuristic_move)-1)  # Move is chosen randomly into the last sublist
@@ -212,12 +212,12 @@ class Brain:
             return heuristic_move
         else:
             if Brain.is_werewolf(self):
-                if (len(self.currentmap.werewolves) > 1):
+                if len(self.currentmap.werewolves) > 1:
                     value_moves = self.join_allies(group)
                 else:
                     value_moves = split_filter(delete_zero_moves(value_moves))
             else:
-                if (len(self.currentmap.vampires) > 1):
+                if len(self.currentmap.vampires) > 1:
                     value_moves = self.join_allies(group)
                 else:
                     value_moves = split_filter(delete_zero_moves(value_moves))
@@ -425,7 +425,6 @@ class Brain:
                 # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
                 #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
                 possible_moves += [(i, group_possible_moves, )]
-                print(group_possible_moves)
         else:
             for i in range(len(self.currentmap.vampires)):
                 # Interesting boxes close to human
@@ -445,5 +444,6 @@ class Brain:
                 # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
                 #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
                 possible_moves += [(i, group_possible_moves,)]
-                print(group_possible_moves)
-        return self.createMOV(self.clean_double_moves(delete_zero_moves(moves)))
+
+        print("Possible moves :", possible_moves)
+        return self.createMOV(self.clean_double_moves(delete_zero_moves(possible_moves)))
