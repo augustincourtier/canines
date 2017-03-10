@@ -86,6 +86,8 @@ if __name__ == '__main__':
 
             moves = brain.return_moves()
 
+            print moves
+
             send_command(sock, "MOV", moves[0], moves[1])
 
             time.sleep(1)

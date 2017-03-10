@@ -38,7 +38,6 @@ def delete_zero_moves(moves):
         non_zero_moves += [non_zero_move]
     return non_zero_moves
 
-
 def list_of_lists_to_list(list_of_lists):
     """[[a,b],[c,d]] => [a,b,c,d]"""
     return [y for x in list_of_lists for y in x]
@@ -58,5 +57,3 @@ def sort_human_by_number(humans):
     for humanIndex in human_indexes:
         result.append(humans[humanIndex[1]])
     return result
-
-
