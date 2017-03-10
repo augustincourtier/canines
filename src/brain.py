@@ -4,6 +4,7 @@ from copy import deepcopy
 from random import randint
 from prepare_moves import *
 from more_itertools import unique_everseen
+import operator
 
 class Brain:
 
@@ -97,6 +98,21 @@ class Brain:
 
         return [[move]]
 
+    def find_group_allies(self, group_coord):
+        given_map = self.currentmap
+        allies = []
+        if Brain.is_werewolf(self):
+            for werewolf in given_map.werewolves:
+                if (werewolf[1] != group_coord):
+                    allies.append(werewolf)
+        else:
+            for vampire in given_map.vampires:
+                if (vampire[1] != group_coord):
+                    allies.append(vampire)
+
+        return allies
+
+
     def generate_value_boxes(self, given_group):
         """this function gives interesting boxes around one group"""
         boxes = []  # this arrays stores interesting boxes around a group
@@ -147,7 +163,6 @@ class Brain:
 
             # Filters move to keep first those which allow to kill an adjacent group of enemy
             value_moves_filtered = []
-            print('move 0 :', len(value_moves))
             for move in value_moves:
                 filtered_move = self.enemy_filter(move)
                 if len(filtered_move) > 0:
@@ -156,6 +171,8 @@ class Brain:
                 move_filtered = value_moves_filtered
             else:
                 move_filtered = value_moves
+
+            print('filtered move :', len(move_filtered))
 
             # # first heuristic
             # new_moves1 = []
@@ -180,11 +197,12 @@ class Brain:
             #             new_moves1 = [move]
             # print('new move 1 :' ,len(new_moves1))
 
-            # second heuristic
+            # heuristic
             heuristic_move = []
             score_max = 0
             for move in move_filtered:
                 heuristic = self.heuristic(move, boxes, group[1])
+
                 if score_max == 0:
                     score_max = heuristic
                     heuristic_move = [move]
@@ -194,14 +212,16 @@ class Brain:
                     elif score_max < heuristic:
                         score_max = heuristic
                         heuristic_move = [move]
+
             heuristic_move = split_filter(delete_zero_moves(heuristic_move))
 
             if (len(heuristic_move) == 0):
                 heuristic_move = self.join_allies(group)
 
+            print('heuristic move :' ,len(heuristic_move))
+
             i = randint(0, len(heuristic_move)-1)  # Move is chosen randomly into the last sublist
 
-            print('new move 2 :' ,len(heuristic_move))
             print(heuristic_move[i])
             return heuristic_move[i]
         else:
@@ -278,38 +298,46 @@ class Brain:
         """This heuristic finds what group of human is naturally targeted on each box and evaluate the number of
         human that can be eaten when placing a group on a box, considering distances and the amount of the group"""
         box_with_target_humans = self.find_target_humans(boxes, previousCoord)
-        targets = self.currentmap.humans
+        allies = self.find_group_allies(previousCoord)
+        if Brain.is_werewolf(self):
+            enemies = self.currentmap.vampires
+        else:
+            enemies = self.currentmap.werewolves
         score = 0
         visited_target = []
         for subgroup in move:
-            if Brain.is_werewolf(self):
-                enemies = self.currentmap.vampires
-            else:
-                enemies = self.currentmap.werewolves
-            for target in targets:
-                dist_target_enemy = []
-                for enemy in enemies:
-                    dist_target_enemy += [max(abs(target[1][0]-enemy[1][0]), abs(target[1][1]-enemy[1][1]))]
-                dist_min_enemy = min(dist_target_enemy)
-                if dist_min_enemy <= max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1])):
+            attack = subgroup[0]
+            for box_with_target in box_with_target_humans:
+                for target in box_with_target[1]:
+                    # Removing targets which are nearer from an enemy
+                    dist_target_enemy = []
+                    for enemy in enemies:
+                        dist_target_enemy += [max(abs(target[1][0]-enemy[1][0]), abs(target[1][1]-enemy[1][1]))]
+                    dist_min_enemy = min(dist_target_enemy)
+                    if dist_min_enemy <= max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1])):
+                        box_with_target[1].remove(target)
+                        continue
+                    # Removing targets which are nearer from a viable ally
+                    dist_target_allie = []
+                    for allie in allies:
+                        dist_target_allie += [[max(abs(target[1][0]-allie[1][0]), abs(target[1][1]-allie[1][1])), allie[0]]]
+                    if (len(dist_target_allie) > 0):
+                        dist_min_allie = min(dist_target_allie, key=operator.itemgetter(0))
+                        if dist_min_allie[0] <= max(abs(target[1][0]-subgroup[1][0]), abs(target[1][1]-subgroup[1][1])) and dist_min_allie[1] >= target[0]:
+                            box_with_target[1].remove(target)
+                            continue
+                if len(box_with_target[1]) == 0:
                     score += 0
-                else:
-                    attack = subgroup[0]
-                    for boxWithTarget in box_with_target_humans:
-                        if len(boxWithTarget[1]) == 0:
-                            score += 0
-                        elif subgroup[1] == boxWithTarget[0]:
-                            peopleInTargets = []
-                            for target in sort_human_by_number(boxWithTarget[1]):
-                                if not list_in_list_of_lists(target[1], visited_target):
-                                    if attack >= target[0]:
-                                        attack -= target[0]
-                                        visited_target += [target[1]]
+                elif subgroup[1] == box_with_target[0]:
+                    peopleInTargets = []
+                    for target in sort_human_by_number(box_with_target[1]):
+                        if not list_in_list_of_lists(target[1], visited_target):
+                            if attack >= target[0]:
+                                attack -= target[0]
+                                visited_target += [target[1]]
 
-                                        distanceTargets = max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])) + 1
-                                        score += float(target[0])/float(distanceTargets)
-
-        # print ('score final', score)
+                                distanceTargets = max(abs(target[1][0]-subgroup[1][0]),abs(target[1][1]-subgroup[1][1])) + 1
+                                score += float(target[0])/float(distanceTargets)
         return score
 
     def find_target_humans(self, boxes, previous_coord):

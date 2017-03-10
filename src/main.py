@@ -90,6 +90,6 @@ if __name__ == '__main__':
 
             send_command(sock, "MOV", moves[0], moves[1])
 
-            time.sleep(1)
+            # time.sleep(3)
         else:
             raise ValueError("commande inconnue")
