@@ -38,7 +38,6 @@ def delete_zero_moves(moves):
         non_zero_moves += [non_zero_move]
     return non_zero_moves
 
-
 def list_of_lists_to_list(list_of_lists):
     """[[a,b],[c,d]] => [a,b,c,d]"""
     return [y for x in list_of_lists for y in x]
@@ -58,20 +57,3 @@ def sort_human_by_number(humans):
     for humanIndex in human_indexes:
         result.append(humans[humanIndex[1]])
     return result
-
-
-# TODO Does the function do what it says?
-def distribute(element, lists):
-    """This function is used to distribute a value on an array of arrays
-    ex : [1,[1,2],[3,4]] => [[1,1,2],[1,3,4]]"""
-    new_list = []
-    if not lists:
-        return [[element]]
-    elif isinstance(lists[0], int):
-        new_list = [lists + [element]]
-        return new_list
-    else:
-        for list in lists:
-            list += [element]
-            new_list += [list]
-        return new_list
