@@ -1,4 +1,4 @@
-from utils import *
+from .utils import *
 import itertools
 import time
 
@@ -19,7 +19,6 @@ def generate_index_array(box_number, group_size):
     for i in range(0, box_number):
         subarray = []
         # for all possibilities of splitting (from 0 to number of our elements in the initial square)
-        for j in range(0, group_size + 1):
         for j in range(0, group_size):
             subarray += [index]
             index += 1

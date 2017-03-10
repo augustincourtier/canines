@@ -4,11 +4,12 @@ import src.map
 import numpy as np
 from copy import deepcopy
 from random import randint
-from prepare_moves import *
+from .prepare_moves import *
 from more_itertools import unique_everseen
+from .map_generator import MapGenerator
+
 
 class Brain:
-
     def __init__(self, currentmap, side):
         self.currentmap = currentmap
         self.side = side
@@ -17,7 +18,8 @@ class Brain:
         return self.side == 1
 
     def generate_value_boxes_and_weight(self, given_group):
-        """this function gives interesting boxes around one group and the weight of the humans / enemies targeted on this boxes"""
+        """this function gives interesting boxes around one group and the weight of the humans / enemies
+        targeted on this boxes"""
         value_boxes_and_weight = [] # this arrays stores the weights
         friend_coords = [] # this arrays stores the coords of the allies
 
@@ -25,7 +27,7 @@ class Brain:
         given_map = self.currentmap
         max_x, max_y = given_map.size_x, given_map.size_y
 
-        #looking for the size information
+        # looking for the size information
         if Brain.is_werewolf(self):
             group, enemies = given_map.werewolves[given_group], given_map.vampires
             for werewolf in given_map.werewolves:
@@ -70,7 +72,6 @@ class Brain:
         print(value_boxes_and_weight)
         return value_boxes_and_weight
 
-
     def join_allies(self, given_group):
         """this function gives a move that allow to join a group of allies"""
         given_map = self.currentmap
@@ -84,7 +85,6 @@ class Brain:
         else:
             for vampire in given_map.vampires:
                 allies.append(vampire)
-
 
         minDist = 0
         move = []
@@ -205,11 +205,11 @@ class Brain:
             if (len(heuristic_move) == 0):
                 heuristic_move = self.join_allies(group)
 
-            i = randint(0, len(heuristic_move)-1)  # Move is chosen randomly into the last sublist
+            # i = randint(0, len(heuristic_move)-1)  # Move is chosen randomly into the last sublist
 
-            print('new move 2 :' ,len(heuristic_move))
-            print(heuristic_move[i])
-            return heuristic_move[i]
+            # print('new move 2 :' ,len(heuristic_move))
+            # print(heuristic_move[i])
+            return heuristic_move
         else:
             if Brain.is_werewolf(self):
                 if (len(self.currentmap.werewolves) > 1):
@@ -222,11 +222,10 @@ class Brain:
                 else:
                     value_moves = split_filter(delete_zero_moves(value_moves))
 
-            i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
+            # i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
 
-            print(value_moves[i])
-            return value_moves[i]
-
+            # print(value_moves[i])
+            return value_moves
 
     def enemy_filter(self, move):
         """This filter chooses moves that allow to kill directly a group of enemies"""
@@ -395,7 +394,7 @@ class Brain:
         for move in moves:
             for el in move:
                 for i in range(len(groups)):
-                    if (el[1][0] == groups[i][1][0] and el[1][1] == groups[i][1][1]):
+                    if el[1][0] == groups[i][1][0] and el[1][1] == groups[i][1][1]:
                         if len(dict_moves) > 1:
                             dict_moves.pop(i, None)
 
@@ -409,13 +408,13 @@ class Brain:
         print(Brain.is_werewolf(self))
         if Brain.is_werewolf(self):
             for i in range(len(self.currentmap.werewolves)):
-                print(self.currentmap.werewolves[i])
+                # Interesting boxes close to human
                 boxes = self.generate_value_boxes(i)
                 box_and_weight = self.generate_value_boxes_and_weight(i)
-                value_moves = generate_value_moves(box_and_weight, self.currentmap.werewolves[i][0], self.currentmap.humans, self.currentmap.vampires)
-                moves += [self.choose_move(value_moves, boxes, self.currentmap.werewolves[i])]
+
                 # All possibities of split in those boxes
-                value_moves = generate_value_moves(boxes, self.currentmap.werewolves[i][0])
+                value_moves = generate_value_moves(box_and_weight, self.currentmap.werewolves[i][0],
+                                                   self.currentmap.humans, self.currentmap.vampires)
 
                 # Calculating most interesting split possibilities for this group
                 group_possible_moves = self.choose_move(value_moves, boxes, self.currentmap.werewolves[i])
@@ -426,13 +425,25 @@ class Brain:
                 # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
                 #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
                 possible_moves += [(i, group_possible_moves, )]
+                print(group_possible_moves)
         else:
             for i in range(len(self.currentmap.vampires)):
-                print(self.currentmap.vampires[i])
+                # Interesting boxes close to human
                 boxes = self.generate_value_boxes(i)
                 box_and_weight = self.generate_value_boxes_and_weight(i)
-                value_moves = generate_value_moves(box_and_weight, self.currentmap.vampires[i][0], self.currentmap.humans, self.currentmap.werewolves)
-                moves += [self.choose_move(value_moves, boxes, self.currentmap.vampires[i])]
 
+                # All possibities of split in those boxes
+                value_moves = generate_value_moves(box_and_weight, self.currentmap.vampires[i][0],
+                                                   self.currentmap.humans, self.currentmap.werewolves)
 
+                # Calculating most interesting split possibilities for this group
+                group_possible_moves = self.choose_move(value_moves, boxes, self.currentmap.vampires[i])
+
+                # Generating possibility maps
+                map_generator.update_maps(subgroup_possible_moves=group_possible_moves)
+
+                # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
+                #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
+                possible_moves += [(i, group_possible_moves,)]
+                print(group_possible_moves)
         return self.createMOV(self.clean_double_moves(delete_zero_moves(moves)))
