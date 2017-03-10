@@ -2,8 +2,8 @@
 import struct
 import array
 
-SERVER_ADDRESS = "192.168.43.122"
-SERVER_PORT = 5555
+# SERVER_ADDRESS = "192.168.43.122"
+# SERVER_PORT = 5555
 
 
 def get_command(sock):

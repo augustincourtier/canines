@@ -3,16 +3,21 @@
 import socket
 import struct
 import array
-from map import Map
-from brain import Brain
+import sys
+from .map import Map
+from .brain import Brain
 import time
-from server_commands import *
+from .server_commands import *
 
 
 if __name__ == '__main__':
-    # Connexion au server
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((SERVER_ADDRESS, SERVER_PORT))
+    try:
+        server_adress, server_port= sys.argv[0], sys.argv[1]
+        # Connexion au server
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((server_adress, server_port))
+    except getopt.GetoptError:
+        print('Connexion impossible : main.py <SERVER_ADDRESS> <SERVER_PORT>')
 
     # Implementation du protocole
 
@@ -85,8 +90,6 @@ if __name__ == '__main__':
             brain = Brain(new_map, team[1])
 
             moves = brain.return_moves()
-
-            print moves
 
             send_command(sock, "MOV", moves[0], moves[1])
 
