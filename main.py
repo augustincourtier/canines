@@ -3,21 +3,21 @@
 import socket
 import struct
 import array
-import sys
-from .map import Map
-from .brain import Brain
+import sys, getopt
+from src.map import Map
+from src.brain import Brain
 import time
-from .server_commands import *
+from src.server_commands import *
 
 
 if __name__ == '__main__':
     try:
-        server_adress, server_port= sys.argv[0], sys.argv[1]
+        server_address, server_port = sys.argv[1], sys.argv[2]
         # Connexion au server
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((server_adress, server_port))
-    except getopt.GetoptError:
-        print('Connexion impossible : main.py <SERVER_ADDRESS> <SERVER_PORT>')
+        sock.connect((server_address, int(server_port)))
+    except:
+        raise ValueError('Connexion impossible : main.py <SERVER_ADDRESS> <SERVER_PORT>')
 
     # Implementation du protocole
 
