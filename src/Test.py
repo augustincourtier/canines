@@ -16,12 +16,14 @@ humans=[[6, [2, 3]], [8, [4, 6]] , [8, [10, 1]], [6, [12, 4]]]
 
 # humans = [[2, [9, 0]],[1,[9,2]],[2,[9,4]],[4,[2,2]]]
 
-mapTest=map.Map(vampire,werewolf,humans,15,8)
+# mapTest=map.Map(vampire,werewolf,humans,15,8)
 
 # print mapTest
 
-brain=Brain(mapTest,-1)
-maps=brain.return_moves()
+# brain=Brain(mapTest,-1)
+# maps=brain.return_moves()
+
+print (len([[]]))
 
 # print(maps)
 

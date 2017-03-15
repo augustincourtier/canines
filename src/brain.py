@@ -69,6 +69,25 @@ class Brain:
         print(value_boxes_and_weight)
         return value_boxes_and_weight
 
+    def attack_weakest_enemy(self, given_group):
+        given_map = self.currentmap
+        max_x, max_y = given_map.size_x, given_map.size_y
+        moves = []
+        if Brain.is_werewolf(self):
+            enemies = given_map.vampires
+        else:
+            enemies = given_map.werewolves
+
+        coordX, coordY = given_group[1][0], given_group[1][1]
+
+        weakest_enemy = min(enemies, key=operator.itemgetter(0))
+        for k in [-1, 0, 1]:
+            for l in [-1, 0, 1]:
+                if max(abs(coordX - weakest_enemy[1][0]),abs(coordY - weakest_enemy[1][1])) > max(abs(coordX + k - weakest_enemy[1][0]), abs(coordY + l - weakest_enemy[1][1])):
+                    if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
+                        moves.append([[given_group[0], [coordX + k, coordY + l]]])
+
+        return moves
 
     def join_allies(self, given_group):
         """this function gives a move that allow to join a group of allies"""
@@ -96,7 +115,10 @@ class Brain:
                                 minDist = max(abs(coordX + k - allie[1][0]), abs(coordY + l - allie[1][1]))
                                 move = [given_group[0], [coordX + k, coordY + l]]
 
-        return [[move]]
+        if (move == []):
+            return []
+        else:
+            return [[move]]
 
     def find_group_allies(self, group_coord):
         given_map = self.currentmap
@@ -199,11 +221,12 @@ class Brain:
 
             # heuristic
             heuristic_move = []
-            score_max = 0
+            score_max = -1
             for move in move_filtered:
                 heuristic = self.heuristic(move, boxes, group[1])
-
-                if score_max == 0:
+                print (move, heuristic)
+                print "----------"
+                if score_max == -1:
                     score_max = heuristic
                     heuristic_move = [move]
                 else:
@@ -215,8 +238,13 @@ class Brain:
 
             heuristic_move = split_filter(delete_zero_moves(heuristic_move))
 
-            if (len(heuristic_move) == 0):
-                heuristic_move = self.join_allies(group)
+            if (len(heuristic_move) == 0 or score_max == 0):
+                join_allies_move = self.join_allies(group)
+                if (len(join_allies_move) == 0):
+                    heuristic_move = self.attack_weakest_enemy(group)
+                    print "caca"
+                else:
+                    heuristic_move = join_allies_move
 
             print('heuristic move :' ,len(heuristic_move))
 
