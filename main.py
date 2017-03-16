@@ -80,8 +80,6 @@ if __name__ == '__main__':
 
         elif commande5 == "UPD":
             # get updates
-            # time.sleep(3)
-
             numbers = number_of_changes(sock)
             changes = get_changes(sock, numbers)
             if len(changes) > 0:
@@ -95,6 +93,6 @@ if __name__ == '__main__':
 
             send_command(sock, "MOV", moves[0], moves[1])
 
-            time.sleep(3)
+            time.sleep(1)
         else:
             raise ValueError("commande inconnue")
