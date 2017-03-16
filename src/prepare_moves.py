@@ -85,12 +85,6 @@ def generate_value_moves(value_boxes_and_weight, size_of_original_group, human_g
         if is_unique == False :
             unique_good_moves.append(good_move)
 
-    print('g :',time.time() - initial_time)
-
-    # for move in unique_good_moves:
-    #     print(move)
-    #     print('-------')
-    print('len :',len(unique_good_moves))
     return unique_good_moves
 
 

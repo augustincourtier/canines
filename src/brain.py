@@ -66,7 +66,6 @@ class Brain:
                                         weight_for_this_coord += [e[0]]
                 if is_value_box == True:
                     value_boxes_and_weight.append([[coordX + k,coordY + l ]] +[weight_for_this_coord+[0]+[group[0]]]) # Create a list of weights and value boxes
-        print(value_boxes_and_weight)
         return value_boxes_and_weight
 
     def attack_weakest_enemy(self, given_group):
@@ -178,15 +177,12 @@ class Brain:
                 move_filtered = value_moves_filtered
             else:
                 move_filtered = value_moves
-            print('filtered move :', len(move_filtered))
 
             # Heuristic
             heuristic_move = []
             score_max = -1
             for move in move_filtered:
                 heuristic = self.heuristic(move, boxes, group[1], group[0])
-                print (move, heuristic)
-                print "----------"
                 if score_max == -1:
                     score_max = heuristic
                     heuristic_move = [move]
@@ -213,12 +209,9 @@ class Brain:
                 else:
                     heuristic_move = join_allies_move
 
-            print('heuristic move :' ,len(heuristic_move))
-
             # Move is chosen randomly into the last sublist
             if len(heuristic_move) > 0:
                 i = randint(0, len(heuristic_move) - 1)
-                print('chosen move :' ,heuristic_move[i])
                 return heuristic_move[i]
             else:
                 return []
@@ -238,7 +231,6 @@ class Brain:
             # Move is chosen randomly into the last sublist
             if len(value_moves) > 0:
                 i = randint(0, len(value_moves) - 1)
-                print('chosen move :' ,value_moves[i])
                 return value_moves[i]
             else:
                 return []
@@ -321,9 +313,6 @@ class Brain:
             groups = self.currentmap.werewolves
         else:
             groups = self.currentmap.vampires
-        # TODO remove print statements when error solved
-        # print("Initial groups: ", groups)
-        # print("Moves: ", moves)
         for i in range(len(groups)):
             try:
                 for el in moves[i]:
@@ -358,13 +347,11 @@ class Brain:
         moves = []
         if Brain.is_werewolf(self):
             for i in range(len(self.currentmap.werewolves)):
-                print(self.currentmap.werewolves[i])
                 box_and_weight = self.generate_value_boxes_and_weight(i)
                 value_moves = generate_value_moves(box_and_weight, self.currentmap.werewolves[i][0], self.currentmap.humans, self.currentmap.vampires)
                 moves += [self.choose_move(value_moves, box_and_weight, self.currentmap.werewolves[i])]
         else:
             for i in range(len(self.currentmap.vampires)):
-                print(self.currentmap.vampires[i])
                 box_and_weight = self.generate_value_boxes_and_weight(i)
                 value_moves = generate_value_moves(box_and_weight, self.currentmap.vampires[i][0], self.currentmap.humans, self.currentmap.werewolves)
                 moves += [self.choose_move(value_moves, box_and_weight, self.currentmap.vampires[i])]
