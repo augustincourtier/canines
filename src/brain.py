@@ -1,8 +1,8 @@
-import map
+import src.map
 import numpy as np
 from copy import deepcopy
 from random import randint
-from prepare_moves import *
+from src.prepare_moves import *
 from more_itertools import unique_everseen
 import operator
 
