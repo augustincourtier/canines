@@ -180,9 +180,7 @@ class Brain:
         return boxes
 
     def choose_move(self, value_moves, boxes, group):
-
-        if len(self.currentmap.humans) > 0:  # If there are still humans on the map
-
+        if len(self.currentmap.humans) > 0: # If there are still humans on the map
             # Filters move to keep first those which allow to kill an adjacent group of enemy
             value_moves_filtered = []
             for move in value_moves:
@@ -193,37 +191,13 @@ class Brain:
                 move_filtered = value_moves_filtered
             else:
                 move_filtered = value_moves
-
             print('filtered move :', len(move_filtered))
 
-            # # first heuristic
-            # new_moves1 = []
-            # score_max = 0
-            # score_distance_max = 0
-            # for move in move_filtered:
-            #     heuristic1 = self.heuristic1(move)
-            #     if score_max == 0:
-            #         score_max = heuristic1[0]
-            #         score_distance_max = heuristic1[1]
-            #         new_moves1 = [move]
-            #     else:
-            #         if score_max == heuristic1[0]:
-            #             if score_distance_max == heuristic1[1]:
-            #                 new_moves1.append(move)
-            #             elif score_distance_max < heuristic1[1]:
-            #                 score_distance_max = heuristic1[1]
-            #                 new_moves1 = [move]
-            #         elif score_max < heuristic1[0]:
-            #             score_max = heuristic1[0]
-            #             score_distance_max = heuristic1[1]
-            #             new_moves1 = [move]
-            # print('new move 1 :' ,len(new_moves1))
-
-            # heuristic
+            # Heuristic
             heuristic_move = []
             score_max = -1
             for move in move_filtered:
-                heuristic = self.heuristic(move, boxes, group[1])
+                heuristic = self.heuristic(move, boxes, group[1], group[0])
                 print (move, heuristic)
                 print "----------"
                 if score_max == -1:
@@ -238,21 +212,23 @@ class Brain:
 
             heuristic_move = split_filter(delete_zero_moves(heuristic_move))
 
+            # If Heuristic filter all results OR best heuristic score is null => join allies
             if (len(heuristic_move) == 0 or score_max == 0):
                 join_allies_move = self.join_allies(group)
+                # If no allies to join, attack weakest enemy !!
                 if (len(join_allies_move) == 0):
                     heuristic_move = self.attack_weakest_enemy(group)
-                    print "caca"
                 else:
                     heuristic_move = join_allies_move
 
             print('heuristic move :' ,len(heuristic_move))
 
-            i = randint(0, len(heuristic_move)-1)  # Move is chosen randomly into the last sublist
-
-            print(heuristic_move[i])
+            # Move is chosen randomly into the last sublist
+            i = randint(0, len(heuristic_move)-1)
+            print('chosen move :' ,heuristic_move[i])
             return heuristic_move[i]
-        else:
+
+        else: # No humans left
             if Brain.is_werewolf(self):
                 if (len(self.currentmap.werewolves) > 1):
                     value_moves = self.join_allies(group)
@@ -264,9 +240,9 @@ class Brain:
                 else:
                     value_moves = split_filter(delete_zero_moves(value_moves))
 
-            i = randint(0, len(value_moves) - 1)  # Move is chosen randomly into the last sublist
-
-            print(value_moves[i])
+            # Move is chosen randomly into the last sublist
+            i = randint(0, len(value_moves) - 1)
+            print('chosen move :' ,value_moves[i])
             return value_moves[i]
 
 
@@ -322,11 +298,11 @@ class Brain:
     #
     #     return [score, distance_score]
 
-    def heuristic(self, move, boxes, previousCoord):
+    def heuristic(self, move, boxes, previous_coord, previous_size):
         """This heuristic finds what group of human is naturally targeted on each box and evaluate the number of
         human that can be eaten when placing a group on a box, considering distances and the amount of the group"""
-        box_with_target_humans = self.find_target_humans(boxes, previousCoord)
-        allies = self.find_group_allies(previousCoord)
+        box_with_target_humans = self.find_target_humans(boxes, previous_coord, previous_size)
+        allies = self.find_group_allies(previous_coord)
         if Brain.is_werewolf(self):
             enemies = self.currentmap.vampires
         else:
@@ -368,9 +344,9 @@ class Brain:
                                 score += float(target[0])/float(distanceTargets)
         return score
 
-    def find_target_humans(self, boxes, previous_coord):
+    def find_target_humans(self, boxes, previous_coord, previous_size):
         """This function finds the closest group of humans (and biggest if equality) from each box in boxes
-        the paramater previousCoord is used to keep consistancy in moves : if a group of human is closer than other groups
+        the paramater previous_coord is used to keep consistancy in moves : if a group of human is closer than other groups
         from a box but farer than the previous box, then the goal is not to got toward this group of human"""
         H = self.currentmap.humans
         box_with_target_humans = []
@@ -378,7 +354,7 @@ class Brain:
             target_humans = []
             closest_humans = []
             for h in H:
-                if max(abs(previous_coord[0] - h[1][0]), abs(previous_coord[1] - h[1][1])) > max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
+                if previous_size >= h[0] and max(abs(previous_coord[0] - h[1][0]), abs(previous_coord[1] - h[1][1])) > max(abs(box[0] - h[1][0]), abs(box[1] - h[1][1])):
                     if not closest_humans:
                         closest_humans = [h[0],[h[1][0], h[1][1]]]
                         target_humans = [[h[0],[h[1][0], h[1][1]]]]

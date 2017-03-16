@@ -22,8 +22,8 @@ if __name__ == '__main__':
     # Implementation du protocole
 
     # SENDING NAME WITH NME COMMAND
-    name = "VAMPIRE"
-    send_command(sock, "NME", 7, name)
+    name = "JOHNCANINE"
+    send_command(sock, "NME", 10, name)
 
     # RECEIVING DIMENSIONS (SET)
     commande1 = get_command(sock)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
         elif commande5 == "UPD":
             # get updates
-            time.sleep(3)
+            # time.sleep(3)
 
             numbers = number_of_changes(sock)
             changes = get_changes(sock, numbers)
