@@ -92,7 +92,5 @@ if __name__ == '__main__':
             moves = brain.return_moves()
 
             send_command(sock, "MOV", moves[0], moves[1])
-
-            time.sleep(1)
         else:
             raise ValueError("commande inconnue")
