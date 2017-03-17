@@ -180,7 +180,7 @@ class Brain:
                 move_filtered = value_moves
 
             if (len(move_filtered)>20):
-                i = randint(0, len(value_moves) - 1)
+                i = randint(0, len(move_filtered) - 1)
                 return move_filtered[i]
 
 
