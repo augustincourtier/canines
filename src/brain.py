@@ -244,18 +244,18 @@ class Brain:
                 for e in self.find_enemies():
                     if coordX - e[1][0] == 0:
                         if coordY - e[1][1] >= 1:
-                            value_moves += [[[group[0], coordX, coordY - 1]]]
+                            value_moves += [[[group[0], [coordX, coordY - 1]]]]
                         elif coordY - e[1][1] <= -1:
-                            value_moves += [[[group[0], coordX, coordY + 1]]]
+                            value_moves += [[[group[0], [coordX, coordY + 1]]]]
 
                     elif coordY - e[1][1] == 0:
                         if coordX - e[1][0] >= 1:
-                            value_moves += [[[group[0], coordX - 1, coordY]]]
+                            value_moves += [[[group[0], [coordX - 1, coordY]]]]
                         elif coordX - e[1][0] <= -1:
-                            value_moves += [[[group[0], coordX + 1, coordY]]]
+                            value_moves += [[[group[0], [coordX + 1, coordY]]]]
 
                     elif abs(coordX - e[1][0]) == 1 and abs(coordY - e[1][1]) == 1:
-                        value_moves += [[[group[0], e[1][0], e[0]]]]
+                        value_moves += [[[group[0], [e[1][0], e[0]]]]]
                     else:
                         if coordX - e[1][0] >= 1:
                             x = coordX - 1
@@ -265,7 +265,7 @@ class Brain:
                             y = coordY - 1
                         elif coordY - e[1][1] <= -1:
                             y = coordY +1
-                        value_moves += [[[group[0], x, y]]]
+                        value_moves += [[[group[0], [x, y]]]]
                 return value_moves
 
     def enemy_filter(self, move):
