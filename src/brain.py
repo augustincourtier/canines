@@ -58,7 +58,7 @@ class Brain:
                 # box is interesting if going there make a group closer to enemies TODO : allies
                 else:
                     for e in enemies:
-                        if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) != 2 and max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
+                        if max(abs(coordX - e[1][0]),abs(coordY - e[1][1])) > max(abs(coordX + k - e[1][0]), abs(coordY + l - e[1][1])):
                             if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                                 if not list_in_list_of_lists([coordX + k, coordY + l], friend_coords):
                                     is_value_box = True
