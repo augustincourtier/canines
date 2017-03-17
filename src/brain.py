@@ -83,7 +83,7 @@ class Brain:
         weakest_enemy = min(enemies, key=operator.itemgetter(0))
         for k in [-1, 0, 1]:
             for l in [-1, 0, 1]:
-                if max(abs(coordX - weakest_enemy[1][0]),abs(coordY - weakest_enemy[1][1])) != 2 and max(abs(coordX - weakest_enemy[1][0]),abs(coordY - weakest_enemy[1][1])) > max(abs(coordX + k - weakest_enemy[1][0]), abs(coordY + l - weakest_enemy[1][1])):
+                if max(abs(coordX - weakest_enemy[1][0]),abs(coordY - weakest_enemy[1][1])) > max(abs(coordX + k - weakest_enemy[1][0]), abs(coordY + l - weakest_enemy[1][1])):
                     if (0 <= coordX + k <= max_x - 1) and (0 <= coordY + l <= max_y - 1):
                         moves.append([[given_group[0], [coordX + k, coordY + l]]])
 
