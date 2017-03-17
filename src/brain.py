@@ -179,6 +179,11 @@ class Brain:
             else:
                 move_filtered = value_moves
 
+            if (len(move_filtered)>20):
+                i = randint(0, len(value_moves) - 1)
+                return move_filtered[i]
+
+
             # Heuristic
             heuristic_move = []
             score_max = -1
