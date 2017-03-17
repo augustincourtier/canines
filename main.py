@@ -62,7 +62,6 @@ if __name__ == '__main__':
     new_map.initialize_map(map_infos)
     team = new_map.find_grp(initial_x, initial_y)
 
-
     # Initialize
     brain = Brain(new_map, team[1])
 
@@ -81,15 +80,33 @@ if __name__ == '__main__':
             if len(changes) > 0:
                 new_map.update_map(changes)
 
-            # TODO Improve scoring
             print("Nouvelle map, nouveau score : ", Score.scoring(Score(new_map, team[1])))
 
-            # TODO I moved this up, check when we need to update it
-            # Update brain with the new map
+            # Update brain with the new map ==> Returns possible maps
             brain = Brain(new_map, team[1])
+            team_maps = brain.compute_next_move()  # returning 1st step of minimax
 
-            moves = brain.return_moves()
-            send_command(sock, "MOV", moves[0], moves[1])
+            maps = []
+            # Enemy brain ==> Returns possible enemies maps
+            if brain.is_werewolf():
+                for i in range(len(team_maps)):
+                    enemy_brain = Brain(team_maps[i], -1)
+                    enemy_maps = enemy_brain.compute_next_move()
+                    maps += [[team_maps[i], [enemy_maps]]]
+            else:
+                for i in range(len(team_maps)):
+                    enemy_brain = Brain(team_maps[i], 1)
+                    enemy_maps = enemy_brain.compute_next_move()
+                    maps += [[team_maps[i], [enemy_maps]]]
+
+            # TODO : Appeler Minimax
+            next_map = maps[randint(len(maps))][0]
+            if brain.is_werewolf():
+                next_moves = brain.return_moves(next_map.old_werewolves)
+            else:
+                next_moves = brain.return_moves(next_map.old_vampires)
+            print("Next moves", next_moves)
+            send_command(sock, "MOV", next_moves[0], next_moves[1])
 
             time.sleep(1)
         else:

@@ -361,8 +361,8 @@ class Brain:
         else:
             return self.currentmap.vampires
 
-    # This function create MOV that can be sent to server from an array of moves
     def createMOV(self, moves):
+        """This function create MOV that can be sent to server from an array of moves"""
         movCmd = []
         movNb = 0
         if Brain.is_werewolf(self):
@@ -374,10 +374,11 @@ class Brain:
         # print("Moves: ", moves)
         for i in range(len(groups)):
             try:
-                for el in moves[i]:
-                    if check_move_permission(groups[i][0], el[0]):
-                        movCmd += [groups[i][1][0], groups[i][1][1], el[0], el[1][0], el[1][1]]
-                        movNb += 1
+                # for el in moves[i]:
+                #     print("el", moves, moves[i])
+                if check_move_permission(groups[i][0], moves[i][0]):
+                    movCmd += [groups[i][1][0], groups[i][1][1], moves[i][0], moves[i][1][0], moves[i][1][1]]
+                    movNb += 1
             except KeyError:
                 continue
 
@@ -392,21 +393,20 @@ class Brain:
         dict_moves = {k: v for k, v in enumerate(moves)}
 
         for move in moves:
-            for el in move:
-                for i in range(len(groups)):
-                    if el[1][0] == groups[i][1][0] and el[1][1] == groups[i][1][1]:
-                        if len(dict_moves) > 1:
-                            dict_moves.pop(i, None)
+            # for el in move:
+            for i in range(len(groups)):
+                if move[1][0] == groups[i][1][0] and move[1][1] == groups[i][1][1]:
+                    if len(dict_moves) > 1:
+                        dict_moves.pop(i, None)
 
         return dict_moves
 
-    # Returns moves to the server
-    def return_moves(self):
-        """Returns moves to the server"""
+    def compute_next_move(self):
+        """Computes next move for the indicated team : 0 (ourself), 1 (enemies)"""
         possible_moves = []
-        map_generator = MapGenerator(enemies_coords=self.find_enemies())
-        print(Brain.is_werewolf(self))
         if Brain.is_werewolf(self):
+            map_generator = MapGenerator(enemies_coords=self.find_enemies(), humans=self.currentmap.humans,
+                                         size_x=self.currentmap.size_x, size_y=self.currentmap.size_y, team=1)
             for i in range(len(self.currentmap.werewolves)):
                 # Interesting boxes close to human
                 boxes = self.generate_value_boxes(i)
@@ -418,14 +418,17 @@ class Brain:
 
                 # Calculating most interesting split possibilities for this group
                 group_possible_moves = self.choose_move(value_moves, boxes, self.currentmap.werewolves[i])
+                print("Possible moves", group_possible_moves)
 
                 # Generating possibility maps
-                map_generator.update_maps(subgroup_possible_moves=group_possible_moves)
+                map_generator.update_team_maps(subgroup_possible_moves=group_possible_moves)
 
                 # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
                 #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
-                possible_moves += [(i, group_possible_moves, )]
+                # possible_moves += [group_possible_moves]
         else:
+            map_generator = MapGenerator(enemies_coords=self.find_enemies(), humans=self.currentmap.humans,
+                                         size_x=self.currentmap.size_x, size_y=self.currentmap.size_y, team=-1)
             for i in range(len(self.currentmap.vampires)):
                 # Interesting boxes close to human
                 boxes = self.generate_value_boxes(i)
@@ -437,13 +440,17 @@ class Brain:
 
                 # Calculating most interesting split possibilities for this group
                 group_possible_moves = self.choose_move(value_moves, boxes, self.currentmap.vampires[i])
-
+                print("Possible moves", group_possible_moves)
                 # Generating possibility maps
-                map_generator.update_maps(subgroup_possible_moves=group_possible_moves)
+                map_generator.update_team_maps(subgroup_possible_moves=group_possible_moves)
 
-                # description possible_moves = [ (group_i, [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
-                #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]] ), ... ]
-                possible_moves += [(i, group_possible_moves,)]
+                # description possible_moves = [ [[[split1, [newX1, newY1]], [split1', [newX1', newY1']],
+                #                                  [split2, [newX2, newY2]], [split2', [newX2', newY2']]], ... ]
+                # possible_moves += [group_possible_moves]
+        return map_generator.generate_maps_objects()
 
-        print("Possible moves :", possible_moves)
-        return self.createMOV(self.clean_double_moves(delete_zero_moves(possible_moves)))
+    def return_moves(self, next_move):
+        """Returns moves to the server"""
+        print("Clean ", self.clean_double_moves(next_move))
+        return self.createMOV(self.clean_double_moves(next_move))
+
