@@ -49,3 +49,36 @@ def heuristic(map):
         else:
             captureH[i][0] = 'E'
 
+def heuristic1(map):
+    V, W = map.vampires, map.werewolves
+    nb_vamp, nb_ww = len(V), len(W)
+    pop_vamp = 0
+    pop_ww = 0
+    pop_vamp_moyenne = pop_vamp/len(V)
+    pop_ww_moyenne = pop_ww/len(W)
+    for i in range(nb_vamp):
+        pop_vamp = pop_vamp + V[i][0]
+        pop_vamp_moyenne = pop_vamp/len(V)
+    for j in range(nb_ww):
+        pop_ww = pop_ww + W[j][0]
+        pop_ww_moyenne = pop_ww/len(W)
+    # print(pop_vamp_moyenne)
+    # print(pop_ww_moyenne)
+
+def heuristic2(map):
+    V, W = map[0], map[1]
+    nb_vamp, nb_ww = len(V), len(W)
+    pop_vamp = 0
+    pop_ww = 0
+    pop_vamp_moyenne = pop_vamp/len(V)
+    pop_ww_moyenne = pop_ww/len(W)
+    for i in range(nb_vamp):
+        pop_vamp = pop_vamp + int(V[i][0])
+        pop_vamp_moyenne = pop_vamp/len(V)
+    for j in range(nb_ww):
+        pop_ww = pop_ww + int(W[j][0])
+        pop_ww_moyenne = pop_ww/len(W)
+    # print(pop_ww_moyenne)
+    # print(pop_vamp_moyenne)
+    return pop_vamp_moyenne - pop_ww_moyenne
+

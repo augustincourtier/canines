@@ -397,7 +397,10 @@ class Brain:
                             movNb += 1
             except KeyError:
                 continue
-
+        if len(movCmd) > len(moves.keys()):
+            slice = 5 * (len(moves.keys()))
+            movCmd = movCmd[:slice]
+            movNb = len(moves.keys())
         return [movNb, movCmd]
 
     def clean_double_moves(self, moves):
@@ -434,7 +437,7 @@ class Brain:
 
                 # Calculating most interesting split possibilities for this group
                 group_possible_moves = self.choose_move(value_moves, box_and_weight, self.currentmap.werewolves[i])
-                print("Possible moves", group_possible_moves)
+                # print("Possible moves", group_possible_moves)
 
                 # Generating possibility maps
                 map_generator.update_team_maps(subgroup_possible_moves=group_possible_moves)
@@ -456,7 +459,7 @@ class Brain:
 
                 # Calculating most interesting split possibilities for this group
                 group_possible_moves = self.choose_move(value_moves, box_and_weight, self.currentmap.vampires[i])
-                print("Possible moves", group_possible_moves)
+                # print("Possible moves", group_possible_moves)
                 # Generating possibility maps
                 map_generator.update_team_maps(subgroup_possible_moves=group_possible_moves)
 
@@ -467,6 +470,6 @@ class Brain:
 
     def return_moves(self, next_move):
         """Returns moves to the server"""
-        print("Clean ", self.clean_double_moves(next_move))
+        # print("Clean ", self.clean_double_moves(next_move))
         return self.createMOV(self.clean_double_moves(next_move))
 

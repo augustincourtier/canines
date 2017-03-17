@@ -26,14 +26,14 @@ class MapGenerator:
             # first iteration
             for move in subgroup_possible_moves:
                 self.team_possible_maps += [[move]]
-                print("new map", self.team_possible_maps)
+                # print("new map", self.team_possible_maps)
         else:
             maps = []
             # combining each possibility of each group with each other
             for map_i in range(len(self.team_possible_maps)):
                 for move in subgroup_possible_moves:
                     maps += [[self.team_possible_maps[map_i][0], move[0]]]
-                    print("new new map", maps)
+                    # print("new new map", maps)
 
             self.team_possible_maps = maps
 
@@ -54,6 +54,6 @@ class MapGenerator:
                 imap = Map(vampires=next_map, werewolves=self.enemies_coords, humans=self.humans,
                             size_x=self.size_x, size_y=self.size_y)
             imap.delete_duplicate_in_next_map()
-            print("Map", i, ":", imap)
+            # print("Map", i, ":", imap)
             maps += [imap]
         return maps

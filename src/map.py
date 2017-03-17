@@ -23,9 +23,10 @@ class Map:
         self.old_vampires = copy.deepcopy(vampires)
 
     def __repr__(self):
-        return {'humans': self.humans,
-                'vampires': self.vampires,
-                'werewolves': self.werewolves}.__repr__()
+        # return {'humans': self.humans,
+        #         'vampires': self.vampires,
+        #         'werewolves': self.werewolves}.__repr__()
+        return "map"
 
     def initialize_map(self, init_data):
         """update_data = [[X, Y, humans, vampires, werewolves], ...]"""
@@ -126,10 +127,10 @@ class Map:
         while i < len(self.humans):
             # comparing humans coordinates to werewolves
             for j in range(len(self.werewolves)):
-                print(i, j, self.humans, self.werewolves)
+                # print(i, j, self.humans, self.werewolves)
                 if self.humans[i][1][0] == self.werewolves[j][1][0] and self.humans[i][1][1] == self.werewolves[j][1][1]:
                     self.werewolves[j][0] += self.humans[i][0]
-                    print("Replaced humans by werewolves")
+                    # print("Replaced humans by werewolves")
                     self.humans = self.humans[:i] + self.humans[i+1:]
                     cut = True
                     break
@@ -159,17 +160,17 @@ class Map:
                     self.vampires[i][0] += self.werewolves[j][0]
                     self.werewolves = self.werewolves[:j] + self.werewolves[j+1:]
                     cut_w = True
-                    print("Replaced werewolves by vampires")
+                    # print("Replaced werewolves by vampires")
                 elif self.werewolves[j][0] >= 1.5*self.vampires[i][0]:
                     self.werewolves[j][0] += self.vampires[i][0]
                     self.vampires = self.vampires[:i] + self.vampires[i+1:]
                     cut_v = True
-                    print("Replaced vampires by werewolves")
+                    # print("Replaced vampires by werewolves")
                 else:
                     self.werewolves[j][0] += self.vampires[i][0]
                     self.vampires = self.vampires[:i] + self.vampires[i+1:]
                     cut_v = True
-                    print("Replaced vampires by werewolves (random battle)")
+                    # print("Replaced vampires by werewolves (random battle)")
 
             if cut_v:
                 # as we sliced the list
