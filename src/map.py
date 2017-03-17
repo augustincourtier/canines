@@ -126,6 +126,7 @@ class Map:
         while i < len(self.humans):
             # comparing humans coordinates to werewolves
             for j in range(len(self.werewolves)):
+                print(i, j, self.humans, self.werewolves)
                 if self.humans[i][1][0] == self.werewolves[j][1][0] and self.humans[i][1][1] == self.werewolves[j][1][1]:
                     self.werewolves[j][0] += self.humans[i][0]
                     print("Replaced humans by werewolves")

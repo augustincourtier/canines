@@ -32,7 +32,7 @@ class MapGenerator:
             # combining each possibility of each group with each other
             for map_i in range(len(self.team_possible_maps)):
                 for move in subgroup_possible_moves:
-                    maps += [[self.team_possible_maps[map_i], move]]
+                    maps += [[self.team_possible_maps[map_i][0], move[0]]]
                     print("new new map", maps)
 
             self.team_possible_maps = maps

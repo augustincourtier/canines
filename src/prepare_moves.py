@@ -68,7 +68,7 @@ def generate_value_moves(value_boxes_and_weight, size_of_original_group, human_g
                     # for l in range(0 , weight_to_share+1):
                     #     tuple_per_value_box.append([index[0]+l,index[1]])
                     # tuples_per_value_box.append(tuple_per_value_box)
-                    tuples_per_value_box.append([[index[0],index[1]], [index[0]+weight_to_share,index[1]]])
+                    tuples_per_value_box.append([[index[0], index[1]], [index[0]+weight_to_share,index[1]]])
 
                 for possible_move in list(itertools.product(*tuples_per_value_box)):
                     sum_weight = 0

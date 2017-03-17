@@ -57,3 +57,10 @@ def sort_human_by_number(humans):
     for humanIndex in human_indexes:
         result.append(humans[humanIndex[1]])
     return result
+
+def subfinder(mylist, pattern):
+    matches = []
+    for i in range(len(mylist)):
+        if mylist[i] == pattern[0] and mylist[i:i+len(pattern)] == pattern:
+            matches.append(pattern)
+    return len(matches) == 0

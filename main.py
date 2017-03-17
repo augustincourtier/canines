@@ -5,20 +5,26 @@ import struct
 import array
 from src.map import Map
 from src.brain import Brain
+import sys, getopt
 import time
 from src.server_commands import *
 from scoring_folder.scoring import Score
+from random import randint
 
 
 if __name__ == '__main__':
-    # Connexion au server
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((SERVER_ADDRESS, SERVER_PORT))
+    try:
+        server_address, server_port = sys.argv[1], sys.argv[2]
+        # Connexion au server
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((server_address, int(server_port)))
+    except:
+        raise ValueError('Connexion impossible : main.py <SERVER_ADDRESS> <SERVER_PORT>')
 
-    # Implementation du protocole
+        # Implementation du protocole
 
-    # SENDING NAME WITH NME COMMAND
-    name = "VAMPIRE"
+        # SENDING NAME WITH NME COMMAND
+    name = "JOHNCANINE"
     send_command(sock, "NME", 7, name)
 
     # RECEIVING DIMENSIONS (SET)
@@ -92,16 +98,21 @@ if __name__ == '__main__':
                 for i in range(len(team_maps)):
                     enemy_brain = Brain(team_maps[i], -1)
                     enemy_maps = enemy_brain.compute_next_move()
-                    maps += [[team_maps[i], [enemy_maps]]]
+                    # print("Enemy maps:", enemy_maps)
+                    maps.append([team_maps[i], [enemy_maps]])
             else:
                 for i in range(len(team_maps)):
                     enemy_brain = Brain(team_maps[i], 1)
                     enemy_maps = enemy_brain.compute_next_move()
-                    maps += [[team_maps[i], [enemy_maps]]]
+                    # print("Enemy maps:", enemy_maps)
+                    maps.append([team_maps[i], [enemy_maps]])
+            # print("Maps:", maps)
 
-            # TODO : Appeler Minimax
-            next_map = maps[randint(len(maps))][0]
+            next_map = maps[0][0]
+
+            print("Next map", next_map)
             if brain.is_werewolf():
+                print(next_map.old_werewolves)
                 next_moves = brain.return_moves(next_map.old_werewolves)
             else:
                 next_moves = brain.return_moves(next_map.old_vampires)
