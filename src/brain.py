@@ -5,6 +5,7 @@ from random import randint
 from src.prepare_moves import *
 from more_itertools import unique_everseen
 import operator
+import time
 
 class Brain:
 
@@ -214,7 +215,7 @@ class Brain:
                 i = randint(0, len(heuristic_move) - 1)
                 return heuristic_move[i]
             else:
-                return []
+                time.sleep(3)
 
         else: # No humans left
             if Brain.is_werewolf(self):
@@ -233,7 +234,7 @@ class Brain:
                 i = randint(0, len(value_moves) - 1)
                 return value_moves[i]
             else:
-                return []
+                time.sleep(3)
 
 
     def enemy_filter(self, move):
